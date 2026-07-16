@@ -6,6 +6,7 @@
     <title>Website Request Form</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         /* ===== RESET & BASE ===== */
         *,
@@ -1421,6 +1422,19 @@
         const FORM_SUBMIT_URL = 'https://formsubmit.co/amworxx@gmail.com';
 
         // =====================================================================
+        //  EMAILJS CONFIG (for OTP code delivery)
+        //  Sign up free at https://www.emailjs.com/
+        //  1. Create an Email Service  →  copy Service ID
+        //  2. Create an Email Template  →  use variables: {{to_email}}, {{otp_code}}, {{from_name}}
+        //  3. Go to Account → API Keys  →  copy Public Key
+        // =====================================================================
+        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';    // https://dashboard.emailjs.com/admin/account
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';    // https://dashboard.emailjs.com/admin/services
+        const EMAILJS_TEMPLATE_OTP_ID = 'YOUR_TEMPLATE_ID';  // template with: to_email, otp_code, from_name
+        const EMAILJS_TEMPLATE_CLIENT_ID = 'YOUR_TEMPLATE_ID';  // template with: to_email, client_name, business_name, message, from_name
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+
+        // =====================================================================
         //  PRICE CALCULATION ENGINE
         // =====================================================================
 
@@ -1708,42 +1722,39 @@
             otpError.classList.remove('visible');
 
             try {
-                // Send OTP via FormSubmit to the user's email
-                const otpFormData = new FormData();
-                otpFormData.append('_ajax', 'true');
-                otpFormData.append('_subject', 'Your Verification Code');
-                otpFormData.append('from', 'AM Worx Studio');
-                otpFormData.append('email', email);
-                otpFormData.append('message', 'Your verification code is: ' + generatedOtp + '\n\nEnter this code on the website request form to verify your email address.\n\nThis code expires in 5 minutes.');
+                // Send OTP via EmailJS (no activation needed for recipient)
+                const templateParams = {
+                    to_email: email,
+                    otp_code: generatedOtp,
+                    from_name: 'AM Worx Studio'
+                };
 
-                const otpUrl = 'https://formsubmit.co/' + encodeURIComponent(email);
-                const resp = await fetch(otpUrl, {
-                    method: 'POST',
-                    body: otpFormData
-                });
+                const result = await emailjs.send(
+                    EMAILJS_SERVICE_ID,
+                    EMAILJS_TEMPLATE_OTP_ID,
+                    templateParams
+                );
 
-                if (resp.ok) {
-                    const result = await resp.json();
-                    if (result.success !== false) {
-                        // Show OTP input
-                        otpSection.classList.add('visible');
-                        otpStatusMsg.textContent = 'Code sent! Check your inbox (and spam folder).';
-                        otpStatusMsg.className = 'otp-status-msg success';
-                        this.textContent = 'Send Again';
-                        this.disabled = false;
-                        otpInput.focus();
-                        startOtpTimer();
-                        return;
-                    }
+                if (result.status === 200 || result.text === 'OK') {
+                    // Show OTP input
+                    otpSection.classList.add('visible');
+                    otpStatusMsg.textContent = 'Code sent! Check your inbox (and spam folder).';
+                    otpStatusMsg.className = 'otp-status-msg success';
+                    this.textContent = 'Send Again';
+                    this.disabled = false;
+                    otpInput.focus();
+                    startOtpTimer();
+                    return;
+                } else {
+                    throw new Error('EmailJS returned: ' + result.text);
                 }
-                // If we get here, something went wrong
-                otpStatusMsg.textContent = 'Failed to send code. Please check the email address or try again.';
-                otpStatusMsg.className = 'otp-status-msg error';
-                this.textContent = 'Send Verification Code';
-                this.disabled = false;
             } catch (err) {
                 console.warn('OTP send failed:', err);
-                otpStatusMsg.textContent = 'Could not send code. Check your internet and try again.';
+                if (err.message && err.message.includes('Public Key')) {
+                    otpStatusMsg.textContent = 'EmailJS is not configured yet. Please set your Public Key, Service ID, and Template ID at the top of the JavaScript section.';
+                } else {
+                    otpStatusMsg.textContent = 'Failed to send code. Please check the email address or try again.';
+                }
                 otpStatusMsg.className = 'otp-status-msg error';
                 this.textContent = 'Send Verification Code';
                 this.disabled = false;
@@ -1977,47 +1988,40 @@
                 console.warn('FormSubmit (studio) failed:', err);
             }
 
-            // ——— Send confirmation to client (best-effort) ———
+            // ——— Send confirmation to client via EmailJS (no activation needed) ———
             if (email) {
                 try {
-                    const clientData = new FormData();
                     const bizName = formData.get('business_name') || 'your business';
                     const total = document.getElementById('calculatedTotal').value;
 
-                    let clientSummary = 'Hi ' + name + ',\n\n';
-                    clientSummary += 'Thank you for submitting your website request for ' + bizName + '!\n\n';
-                    clientSummary += 'Here is a quick overview:\n';
-                    clientSummary += '  Business: ' + bizName + '\n';
-                    clientSummary += '  Website type: ' + (formData.get('website_type') || '-') + '\n';
-                    clientSummary += '  Estimated budget range: $' + total + '\n\n';
-                    clientSummary += 'I will review your answers and get back to you within 24 hours with a detailed proposal.\n\n';
-                    clientSummary += 'If you have any questions in the meantime, feel free to reply to this email.\n\n';
-                    clientSummary += 'Best regards,\n';
-                    clientSummary += 'AM Worx Studio';
+                    let clientMessage = 'Hi ' + name + ',\n\n';
+                    clientMessage += 'Thank you for submitting your website request for ' + bizName + '!\n\n';
+                    clientMessage += 'Here is a quick overview:\n';
+                    clientMessage += '  Business: ' + bizName + '\n';
+                    clientMessage += '  Website type: ' + (formData.get('website_type') || '-') + '\n';
+                    clientMessage += '  Estimated budget range: $' + total + '\n\n';
+                    clientMessage += 'I will review your answers and get back to you within 24 hours with a detailed proposal.\n\n';
+                    clientMessage += 'If you have any questions in the meantime, feel free to reply to this email.\n\n';
+                    clientMessage += 'Best regards,\n';
+                    clientMessage += 'AM Worx Studio';
 
-                    clientData.append('name', name);
-                    clientData.append('email', email);
-                    clientData.append('business', bizName);
-                    clientData.append('_ajax', 'true');
-                    clientData.append('_subject', 'Your Website Request - ' + bizName);
-                    clientData.append('_summary', clientSummary);
-
-                    const clientUrl = 'https://formsubmit.co/' + encodeURIComponent(email);
-                    const clientResp = await fetch(clientUrl, {
-                        method: 'POST',
-                        body: clientData
-                    });
-
-                    if (clientResp.ok) {
-                        const result = await clientResp.json();
-                        if (!result.success) {
-                            console.warn('FormSubmit (client) returned:', result.message);
+                    const clientResult = await emailjs.send(
+                        EMAILJS_SERVICE_ID,
+                        EMAILJS_TEMPLATE_CLIENT_ID,
+                        {
+                            to_email: email,
+                            client_name: name,
+                            business_name: bizName,
+                            message: clientMessage,
+                            from_name: 'AM Worx Studio'
                         }
-                    } else {
-                        console.warn('FormSubmit (client) returned status', clientResp.status);
+                    );
+
+                    if (clientResult.status !== 200 && clientResult.text !== 'OK') {
+                        console.warn('EmailJS (client) returned:', clientResult.text);
                     }
                 } catch (err) {
-                    console.warn('FormSubmit (client) failed:', err);
+                    console.warn('EmailJS (client) failed:', err);
                     // Client still has the on-screen summary + copy button
                 }
             }

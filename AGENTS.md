@@ -9,9 +9,10 @@ Static web app — a self-contained single-file client website survey / intake f
 
 # Stack (locked)
 - **Single HTML file** — all CSS and JS are embedded in `index.html` (no external files, no build step).
-- **FormSubmit.co** as form receiver endpoint (free, unlimited, supports `_cc` and AJAX).
+- **FormSubmit.co** — full submission delivery to `amworxx@gmail.com` (free, unlimited, AJAX).
+- **EmailJS** — OTP code delivery + client confirmation emails (free tier: 200/month, no recipient activation).
 - **GitHub Pages** as static hosting (free forever).
-- **Google Fonts (Inter)** — only external resource loaded via CDN.
+- **Google Fonts (Inter)** + **EmailJS SDK** loaded via CDN.
 
 # Source of Truth
 - **`index.html`** is the single source of truth for:
@@ -19,6 +20,7 @@ Static web app — a self-contained single-file client website survey / intake f
   - All pricing values (via `data-price` attributes and the JS `calculate()` function).
   - Studio name and branding.
   - FormSubmit endpoint URL.
+  - EmailJS configuration (Public Key, Service ID, Template IDs).
 - No separate settings or configuration files.
 
 # Non-negotiables
@@ -31,13 +33,24 @@ Static web app — a self-contained single-file client website survey / intake f
 - Hosting: GitHub Pages (`Settings` → Pages → `main` → `/` (root) source).
 - Domain: optional, e.g. `amworx.github.io/wp_intaker/`.
 
+# Email Architecture
+| Email | Service | To | Content |
+|---|---|---|---|
+| Full submission | FormSubmit.co | `amworxx@gmail.com` | All answers + files |
+| OTP code | EmailJS | Client's email | 6-digit verification code |
+| Client confirmation | EmailJS | Client's email | Thank-you + overview |
+
+FormSubmit must NOT be used to send to unverified client emails (triggers activation emails).
+
 # Workflow
 1. Client opens `index.html` (served via GitHub Pages).
-2. Client fills out the 7-section survey with live price estimation.
-3. On submit, two separate FormSubmit POSTs are sent:
-   - **Studio POST** — full detailed submission to `amworxx@gmail.com`.
-   - **Client POST** — simplified confirmation to the client's email (best-effort).
-4. Summary is displayed on-screen with copy-to-clipboard as fallback.
+2. Client enters email → clicks "Send Verification Code" → **OTP sent via EmailJS**.
+3. Client enters OTP code → email **✓ Verified** and locked (read-only).
+4. Client fills out the 7-section survey with live price estimation.
+5. On submit:
+   - **FormSubmit** sends full submission + files to `amworxx@gmail.com`.
+   - **EmailJS** sends a confirmation to the client's email.
+6. Summary is displayed on-screen with copy-to-clipboard as fallback.
 
 # Pricing
 - Prices are set via `data-price` attributes on each input element.

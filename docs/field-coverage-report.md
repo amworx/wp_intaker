@@ -122,9 +122,9 @@
 - **20 features** with real-world WordPress-compatible options
 - **3 maintenance tiers** for recurring revenue
 - **Live pricing** with per-item breakdown modal
-- **Dual email** delivery (studio + client) with different content
+- **Dual email** delivery (studio via FormSubmit + client via EmailJS)
 - **File uploads** for brand assets and reference materials
-- **Email validation** with format check + confirmation field
+- **OTP email verification** — 6-digit code sent via EmailJS (no activation emails)
 
 ---
 
@@ -132,14 +132,15 @@
 
 | Change | Location | Purpose |
 |---|---|---|
-| **OTP email verification** | Section 2 | Sends 6-digit code to client email; must be verified before submit |
+| **OTP email verification** | Section 2 | Sends 6-digit code via **EmailJS** (no activation emails to client) |
 | **Email format validation** | JS submit handler | Validates `user@domain.tld` pattern |
-| **OTP send + verify flow** | JS + FormSubmit | Generate code → send via email → user enters → verified ✓ |
+| **OTP send + verify flow** | JS + EmailJS | Generate code → send via EmailJS → user enters → verified ✓ |
 | **5-minute OTP expiry** | JS timer | Code auto-expires after 5 minutes; resend available |
 | **Email locked after verify** | Section 2 | Email set to read-only once verified |
 | **File upload input** | Section 5 | Accepts images, PDFs, docs (multiple) |
 | **File name display** | JS UI | Shows selected files with remove button |
-| **File attachment to POST** | JS submit handler | Attaches files to both studio + client emails |
+| **File attachment to POST** | FormSubmit | Files go to studio email via FormSubmit |
+| **Client confirmation email** | EmailJS | Separate client confirmation sent via EmailJS (not FormSubmit) |
 | **File info in summary** | Summary text | Lists uploaded file names |
 | **CSS for file upload + OTP** | Styles | Dashed dropzone, OTP input, verified badge, timer |
 
@@ -161,12 +162,12 @@
 |---|---|---|
 | Empty check | `if (!name \|\| !email)` | "Please fill in your name and a valid email address." |
 | Format check | `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` | "Please enter a valid email address (e.g. name@domain.com)." |
-| **OTP verification** | **6-digit code sent to email via FormSubmit** | "Please verify your email by clicking 'Send Verification Code'..." |
+| **OTP verification** | **6-digit code sent via EmailJS** | "Please verify your email by clicking 'Send Verification Code'..." |
 
 ### OTP Flow
 1. User enters email address
 2. Clicks **"Send Verification Code"**
-3. 6-digit code is generated and sent to user's email via FormSubmit.co
+3. 6-digit code is generated and sent to user's email via **EmailJS** (no activation required)
 4. Code expires in **5 minutes** (shown by countdown timer)
 5. User enters the code and clicks **"Verify"**
 6. On match: email is marked **✓ Verified** and locked (read-only)
@@ -174,3 +175,44 @@
 8. **"Resend code"** button appears after expiry
 
 All checks run sequentially before any data is sent. Submission stops at the first failing check. The **OTP verification is mandatory** — form cannot be submitted without it.
+
+---
+
+## 7. EmailJS Setup Guide (Required for OTP)
+
+The OTP system requires **EmailJS** (free, 200 emails/month). FormSubmit cannot send OTPs to arbitrary emails without triggering activation requests.
+
+### Steps
+1. **Sign up** at [emailjs.com](https://www.emailjs.com/) (free)
+2. **Create an Email Service** → Go to *Email Services* → *Add New Service*
+   - Connect Gmail, Outlook, or any SMTP
+   - Copy the **Service ID** (e.g. `service_abc123`)
+3. **Create OTP Template** → Go to *Email Templates* → *Create New Template*
+   - Template variables: `{{to_email}}`, `{{otp_code}}`, `{{from_name}}`
+   - Design a simple email with your code display
+   - Copy the **Template ID** (e.g. `template_xyz789`)
+4. **Create Client Confirmation Template** → *Create New Template*
+   - Template variables: `{{to_email}}`, `{{client_name}}`, `{{business_name}}`, `{{message}}`, `{{from_name}}`
+   - Design a thank-you/confirmation email
+   - Copy the **Template ID**
+5. **Get Public Key** → Go to *Account* → *API Keys*
+   - Copy the **Public Key** (e.g. `public_key_abc123`)
+6. **Configure in `index.html`** — Update these values at the top of the JS section:
+
+```javascript
+const EMAILJS_PUBLIC_KEY = 'your_public_key_here';
+const EMAILJS_SERVICE_ID = 'your_service_id_here';
+const EMAILJS_TEMPLATE_OTP_ID = 'your_otp_template_id_here';
+const EMAILJS_TEMPLATE_CLIENT_ID = 'your_client_template_id_here';
+```
+
+### Delivery Architecture
+
+| Email | Service | To | Content |
+|---|---|---|---|
+| Studio notification | **FormSubmit.co** | `amworxx@gmail.com` | Full survey + files |
+| OTP code | **EmailJS** | Client's email | 6-digit code |
+| Client confirmation | **EmailJS** | Client's email | Thank-you + overview |
+
+### Why EmailJS instead of FormSubmit for OTP?
+FormSubmit sends an **"Activate your form"** email to any new recipient email address — the client would receive a confusing activation request instead of the OTP code. EmailJS sends directly from your configured service without requiring the recipient to activate anything.
