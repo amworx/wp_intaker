@@ -414,55 +414,39 @@
                 padding: 10px 16px;
             }
         }
-        /* ===== SUMMARY AFTER SUBMIT ===== */
-        .summary-box {
+        /* ===== THANK YOU AFTER SUBMIT ===== */
+        .thankyou-box {
             display: none;
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
             border-radius: 12px;
-            padding: 24px;
+            padding: 32px 24px;
             margin-top: 20px;
-            text-align: left;
+            text-align: center;
         }
-        .summary-box.visible {
+        .thankyou-box.visible {
             display: block;
         }
-        .summary-box h3 {
+        .thankyou-box h3 {
             color: #166534;
-            margin-bottom: 12px;
+            margin: 0 0 8px;
+            font-size: 22px;
         }
-        .summary-box pre {
-            background: #fff;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            border: 1px solid #dce1e8;
-            margin-top: 10px;
-            max-height: 400px;
-            overflow-y: auto;
+        .thankyou-box .thanks-sub {
+            color: #475569;
+            margin: 0 0 16px;
+            font-size: 14px;
+            line-height: 1.6;
         }
-        .copy-btn {
-            margin-top: 12px;
-            padding: 8px 20px;
-            background: #166534;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-        .copy-btn:hover {
-            background: #15803d;
-        }
-        /* ===== EMAIL STATUS IN SUMMARY ===== */
+        /* ===== EMAIL STATUS IN THANK YOU ===== */
         .email-status {
-            margin: 12px 0;
+            margin: 16px auto 0;
             padding: 12px 16px;
             background: #fff;
             border-radius: 8px;
             border: 1px solid #e8ecf1;
+            max-width: 400px;
+            text-align: left;
         }
         .email-status-item {
             display: flex;
@@ -1408,23 +1392,20 @@
             </div>
 
             <!-- ============================================================ -->
-            <!-- SUMMARY BOX (shown after submit)                             -->
+            <!-- THANK YOU (shown after submit)                               -->
             <!-- ============================================================ -->
-            <div class="summary-box" id="summaryBox">
-                <h3>Thank you! Your request has been submitted.</h3>
-                <p>Here is a copy of what you selected. You can save or screenshot this for your records.</p>
+            <div class="thankyou-box" id="thankyouBox">
+                <h3>Thank you! &#10003;</h3>
+                <p class="thanks-sub">
+                    Your website request has been received.<br>
+                    I will review your answers and get back to you within 24 hours.
+                </p>
                 <div class="email-status" id="emailStatus">
                     <div class="email-status-item" id="studioEmailStatus">
                         <span class="email-status-icon">⏳</span>
                         <span>Sending to studio...</span>
                     </div>
-                    <div class="email-status-item" id="clientEmailStatus">
-                        <span class="email-status-icon">⏳</span>
-                        <span>Sending confirmation to your email...</span>
-                    </div>
                 </div>
-                <pre id="summaryText"></pre>
-                <button type="button" class="copy-btn" id="copySummaryBtn">Copy to Clipboard</button>
             </div>
 
             <!-- Hidden field for calculated total -->
@@ -1971,77 +1952,22 @@
                 return;
             }
 
-            errorEl.classList.remove('visible');
-            emailFormatEl.classList.remove('visible');
-
-            // Build summary text
+            // Build FormData for FormSubmit
             const formData = new FormData(this);
             attachFilesToFormData(formData);
-            let summary = '=== WEBSITE REQUEST SUMMARY ===\n\n';
-            summary += 'From: ' + (formData.get('full_name') || '(not provided)') + '\n';
-            summary += 'Business: ' + (formData.get('business_name') || '(not provided)') + '\n';
-            summary += 'Email: ' + (formData.get('client_email') || '(not provided)') + '\n';
-            summary += 'Phone: ' + (formData.get('client_phone') || '(not provided)') + '\n\n';
+            formData.set('_subject', 'New Website Survey - ' + name);
+            formData.set('_ajax', 'true');
 
-            summary += '--- Domain & Hosting ---\n';
-            summary += 'Domain: ' + (formData.get('domain') || '-') + '\n';
-            summary += 'Domain idea: ' + (formData.get('domain_idea') || '-') + '\n';
-            summary += 'Hosting: ' + (formData.get('hosting') || '-') + '\n';
-            summary += 'Business email: ' + (formData.get('email') || '-') + '\n';
-            summary += 'Email count: ' + (formData.get('email_count') || '-') + '\n';
-            summary += 'Setup help: ' + (formData.get('setup_help') || '-') + '\n\n';
-
-            summary += '--- Business ---\n';
-            summary += 'Business description: ' + (formData.get('business_desc') || '-') + '\n\n';
-
-            summary += '--- Website Type ---\n';
-            summary += 'Type: ' + (formData.get('website_type') || '-') + '\n';
-            summary += 'Pages selected: ' + (formData.getAll('page').join(', ') || 'none') + '\n';
-            summary += 'Other pages: ' + (formData.get('other_pages') || '-') + '\n\n';
-
-            summary += '--- Features ---\n';
-            summary += 'Features: ' + (formData.getAll('feature').join(', ') || 'none') + '\n\n';
-
-            summary += '--- Design & Content ---\n';
-            summary += 'Logo: ' + (formData.get('logo') || '-') + '\n';
-            summary += 'Content (text): ' + (formData.get('content_text') || '-') + '\n';
-            summary += 'Content (photos): ' + (formData.get('content_photos') || '-') + '\n';
-            summary += 'Brand colors: ' + (formData.get('brand_colors') || '-') + '\n';
-            summary += 'Inspiration links: ' + (formData.get('inspiration_links') || '-') + '\n\n';
-
-            summary += '--- Timeline & Maintenance ---\n';
-            summary += 'Timeline: ' + (formData.get('timeline') || '-') + '\n';
-            summary += 'Maintenance: ' + (formData.get('maintenance') || '-') + '\n\n';
-
-            summary += '--- Budget ---\n';
-            summary += 'Budget range: ' + (formData.get('budget') || '-') + '\n\n';
-
-            summary += '--- Extra Notes ---\n';
-            summary += (formData.get('extra_notes') || '-') + '\n\n';
-
-            summary += '--- Uploaded Files ---\n';
-            if (selectedFiles.length > 0) {
-                selectedFiles.forEach(f => { summary += '  - ' + f.name + '\n'; });
-            } else {
-                summary += '  (none)\n';
-            }
-            summary += '\n';
-
-            const total = document.getElementById('calculatedTotal').value;
-            summary += '=== ESTIMATED TOTAL: $' + total + ' ===\n';
-
-            // Show summary in the page
-            const summaryBox = document.getElementById('summaryBox');
-            const summaryText = document.getElementById('summaryText');
-            summaryText.textContent = summary;
-            summaryBox.classList.add('visible');
+            // Show thank-you
+            const thankyouBox = document.getElementById('thankyouBox');
+            thankyouBox.classList.add('visible');
 
             // Submit button feedback
             const btn = document.getElementById('submitBtn');
             btn.classList.add('loading');
             btn.disabled = true;
 
-            // ——— Helper to update email status indicators ———
+            // ——— Helper to update email status ———
             function setEmailStatus(id, ok, msg) {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -2054,15 +1980,9 @@
             // ——— Send full submission to studio (amworxx@gmail.com) ———
             (async () => {
                 try {
-                    const studioData = new FormData(this);
-                    attachFilesToFormData(studioData);
-                    studioData.append('_ajax', 'true');
-                    studioData.append('_subject', 'New Website Survey - ' + name);
-                    studioData.append('_summary', summary);
-
                     const resp = await fetch(FORM_SUBMIT_URL, {
                         method: 'POST',
-                        body: studioData
+                        body: formData
                     });
 
                     if (resp.ok) {
@@ -2076,67 +1996,8 @@
                         setEmailStatus('studioEmailStatus', false, 'Studio email error (status ' + resp.status + ')');
                     }
                 } catch (err) {
-                    console.warn('FormSubmit (studio) failed:', err);
+                    console.warn('FormSubmit failed:', err);
                     setEmailStatus('studioEmailStatus', false, 'Studio email failed: ' + err.message);
-                }
-            })();
-
-            // ——— Send confirmation to client via EmailJS ———
-            (async () => {
-                if (!email) {
-                    setEmailStatus('clientEmailStatus', true, 'No email to send confirmation to');
-                    return;
-                }
-                const clientStatusEl = document.getElementById('clientEmailStatus');
-                if (clientStatusEl) {
-                    clientStatusEl.className = 'email-status-item';
-                    const icon = clientStatusEl.querySelector('.email-status-icon');
-                    if (icon) icon.textContent = '⏳';
-                    clientStatusEl.querySelector('span:last-child').textContent = 'Sending confirmation...';
-                }
-                try {
-                    const now = new Date();
-                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const deviceStr = navigator.platform || 'Unknown device';
-                    const browserStr = (function() {
-                        const ua = navigator.userAgent;
-                        if (ua.includes('Firefox')) return 'Firefox';
-                        if (ua.includes('Edg')) return 'Edge';
-                        if (ua.includes('Chrome')) return 'Chrome';
-                        if (ua.includes('Safari')) return 'Safari';
-                        return 'Unknown browser';
-                    })();
-
-                    const templateParams = {
-                        email: email,
-                        to_email: email,
-                        company_name: 'AM Worx Studio',
-                        passcode: '',
-                        time: timeStr,
-                        year: now.getFullYear().toString(),
-                        device: deviceStr,
-                        browser: browserStr,
-                        location: '',
-                        request_time: now.toLocaleString(),
-                        logo_url: 'https://amworx.github.io/wp_intaker/logo.png',
-                        support_url: 'mailto:amworxx@gmail.com'
-                    };
-
-                    const clientResult = await emailjs.send(
-                        EMAILJS_SERVICE_ID,
-                        EMAILJS_TEMPLATE_ID,
-                        templateParams
-                    );
-
-                    if (clientResult && clientResult.status === 200 && clientResult.text === 'OK') {
-                        setEmailStatus('clientEmailStatus', true, 'Confirmation sent ✓');
-                    } else {
-                        const msg = (clientResult && clientResult.text) || 'unknown error';
-                        setEmailStatus('clientEmailStatus', false, 'Confirmation failed: ' + msg);
-                    }
-                } catch (err) {
-                    console.warn('EmailJS (client) failed:', err);
-                    setEmailStatus('clientEmailStatus', false, 'Confirmation failed: ' + (err.message || 'unknown error'));
                 }
             })();
 
@@ -2145,31 +2006,8 @@
             btn.querySelector('.btn-text').textContent = 'Submitted ✓';
             btn.style.background = '#166534';
 
-            // Scroll to summary
-            summaryBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-
-        // =====================================================================
-        //  COPY SUMMARY
-        // =====================================================================
-        document.getElementById('copySummaryBtn').addEventListener('click', function() {
-            const text = document.getElementById('summaryText').textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const orig = this.textContent;
-                this.textContent = 'Copied ✓';
-                setTimeout(() => { this.textContent = orig; }, 2000);
-            }).catch(() => {
-                // Fallback
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                ta.remove();
-                const orig = this.textContent;
-                this.textContent = 'Copied ✓';
-                setTimeout(() => { this.textContent = orig; }, 2000);
-            });
+            // Scroll to thank-you
+            thankyouBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
 
         // =====================================================================
