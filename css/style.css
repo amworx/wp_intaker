@@ -180,17 +180,6 @@ textarea,
   flex-shrink: 0;
 }
 
-.badge {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
 /* ── Main Layout ────────────────────────────────────────── */
 main {
   padding: var(--space-8) 0 var(--space-16);
@@ -498,6 +487,17 @@ textarea {
   margin-top: 2px;
 }
 
+/* Price badge inside feature/addon cards */
+.check-price {
+  margin-left: auto;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  white-space: nowrap;
+  padding-left: var(--space-3);
+  flex-shrink: 0;
+}
+
 /* ── Actions / Submit ───────────────────────────────────── */
 .actions {
   margin-top: var(--space-4);
@@ -599,40 +599,6 @@ textarea {
   line-height: 1.5;
 }
 
-.estimate .hosting {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px dashed var(--color-border);
-  font-size: 0.85rem;
-}
-
-.estimate .hosting strong {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-size: 0.88rem;
-  color: var(--color-text);
-}
-
-.estimate .hosting ul {
-  margin: 0 0 0 var(--space-4);
-  padding: 0;
-  color: var(--color-muted);
-  list-style: none;
-}
-
-.estimate .hosting li {
-  padding: 3px 0;
-  font-size: 0.82rem;
-}
-
-.estimate .hosting li::before {
-  content: "·";
-  display: inline-block;
-  width: 12px;
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
 .estimate-body p:first-child {
   font-size: 0.88rem;
   color: var(--color-muted);
@@ -677,7 +643,8 @@ textarea {
 /* ── Field validation states ────────────────────────────── */
 .field.field-error input,
 .field.field-error select,
-.field.field-error textarea {
+.field.field-error textarea,
+.field.field-error .check-item {
   border-color: var(--color-error);
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
@@ -786,12 +753,6 @@ textarea {
     color: var(--color-text);
   }
 
-  .badge {
-    background: var(--color-surface);
-    border-color: var(--color-border);
-    color: var(--color-muted);
-  }
-
   .section {
     background: var(--color-surface);
     border-color: var(--color-border);
@@ -852,10 +813,6 @@ textarea {
   }
 
   .estimate .line.total {
-    border-top-color: var(--color-border);
-  }
-
-  .estimate .hosting {
     border-top-color: var(--color-border);
   }
 
@@ -1042,14 +999,7 @@ textarea {
 
 /* ── Footer ──────────────────────────────────────────────── */
 .site-footer {
-  border-top: 1px solid var(--color-border);
-  padding: var(--space-6) 0;
-  text-align: center;
-}
-
-.site-footer small {
-  font-size: 0.78rem;
-  color: var(--color-muted);
+  padding: var(--space-8) 0;
 }
 
 /* ── Admin (inherits from style.css) ────────────────────── */

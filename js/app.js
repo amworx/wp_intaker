@@ -21,6 +21,19 @@ function template(str, data) {
   });
 }
 
+/* ── Price lookup helper ────────────────────────────────── */
+function getItemPrice(fid, value) {
+  if (fid === "features") {
+    const item = settings.pricing.features.find((f) => f.id === value);
+    return item ? item.amount : null;
+  }
+  if (fid === "addons") {
+    const item = settings.pricing.addons.find((a) => a.id === value);
+    return item ? item.amount : null;
+  }
+  return null;
+}
+
 /* ── Cost engine (pure) ─────────────────────────────────── */
 function calculateEstimate(ans, cfg) {
   const p = cfg.pricing;
@@ -91,23 +104,7 @@ function renderedEstimateHTML(est) {
     ${rows}
     <div class="line total"><span>Estimated range</span><span>$${est.total.toLocaleString()}</span></div>
     <p class="note">This is a guideline, not a fixed quote. Final price depends on content complexity, revisions, and timeline.</p>
-    <div class="hosting">
-      <strong>Hostinger plan:</strong>
-      <ul>
-        ${recommendedHostingHTML(settings.pricing.hostinger.tiers)}
-      </ul>
-    </div>
   `;
-}
-
-function recommendedHostingHTML(tiers) {
-  // pick the cheapest tier that fits nothing — show all
-  return tiers
-    .map(
-      (t) =>
-        `<li><strong>${t.name}</strong> — $${t.monthly}/mo • ${t.storage} • ${t.bandwidth} • ${t.emails} email accounts</li>`
-    )
-    .join("");
 }
 
 /* ── Form rendering ─────────────────────────────────────── */
@@ -133,17 +130,29 @@ function renderSections() {
         } else if (type === "textarea") {
           control = `<textarea id="field-${fid}" name="${fid}" rows="3" placeholder="${placeholder || ""}" ${required ? "required" : ""}></textarea>`;
         } else if (type === "select") {
-          const opts = (options || []).map((o) => `<option value="${o}">${o}</option>`).join("");
-          control = `<select id="field-${fid}" name="${fid}" ${required ? "required" : ""}><option value="">Choose…</option>${opts}</select>`;
+          // Selectable card group (radio-style, single-select)
+          const items = (options || []).map((o) => {
+            const val = typeof o === "string" ? o : o.value;
+            const labelText = typeof o === "string" ? o : o.label;
+            return `
+              <label class="check-item">
+                <input type="radio" name="${fid}" value="${val}" />
+                <span class="check-label">${labelText}</span>
+              </label>`;
+          }).join("");
+          control = `<div class="check-group" id="field-${fid}">${items}</div>`;
         } else if (type === "checkbox") {
           const items = (options || []).map((o) => {
             const val = typeof o === "string" ? o : o.value;
             const labelText = typeof o === "string" ? o : o.label;
             const sub = typeof o !== "string" && o.desc ? `<small>${o.desc}</small>` : "";
+            const price = getItemPrice(fid, val);
+            const priceStr = price ? `+$${price}` : "";
             return `
               <label class="check-item">
                 <input type="checkbox" name="${fid}" value="${val}" />
                 <span class="check-label">${labelText}${sub}</span>
+                ${priceStr ? `<span class="check-price">${priceStr}</span>` : ""}
               </label>`;
           }).join("");
           control = `<div class="check-group" id="field-${fid}">${items}</div>`;
@@ -196,6 +205,9 @@ function collectAnswers() {
     if (!el) return;
     if (f.type === "checkbox") {
       answers[fid] = Array.from(el.querySelectorAll('input:checked')).map((i) => i.value);
+    } else if (f.type === "select") {
+      const checked = el.querySelector('input[type="radio"]:checked');
+      answers[fid] = checked ? checked.value.trim() : "";
     } else {
       answers[fid] = el.value.trim();
     }
