@@ -350,7 +350,7 @@ async function init() {
 
     // apply studio name + brand to shell
     document.title = template("Project Intake — {{studio.name}}", settings);
-    q(".logo").textContent = settings.studio.name;
+    q("logo").textContent = settings.studio.name;
     document.documentElement.style.setProperty("--color-primary", settings.studio.brand.primary);
     document.documentElement.style.setProperty("--color-dark", settings.studio.brand.dark);
     document.documentElement.style.setProperty("--color-light", settings.studio.brand.light);
