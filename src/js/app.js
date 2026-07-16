@@ -3,7 +3,7 @@
    Survey rendering, live cost calc, FormSubmit POST, jsPDF
    ============================================================ */
 
-const SETTINGS_URL = "../settings/defaults.json";
+const SETTINGS_URL = "settings/defaults.json";
 const FORM_ENDPOINT_TPL = (email) => `https://formsubmit.co/${encodeURIComponent(email)}`;
 
 let settings = null;
