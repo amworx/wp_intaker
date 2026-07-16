@@ -1724,8 +1724,12 @@
                 // Send OTP via EmailJS (no activation needed for recipient)
                 const templateParams = {
                     to_email: email,
+                    to_name: email.split('@')[0],
+                    client_name: email.split('@')[0],
+                    from_name: 'AM Worx Studio',
                     otp_code: generatedOtp,
-                    from_name: 'AM Worx Studio'
+                    message: 'Your verification code is: ' + generatedOtp,
+                    business_name: ''
                 };
 
                 const result = await emailjs.send(
@@ -1734,7 +1738,7 @@
                     templateParams
                 );
 
-                if (result.status === 200 || result.text === 'OK') {
+                if (result && (result.status === 200 || result.text === 'OK')) {
                     // Show OTP input
                     otpSection.classList.add('visible');
                     otpStatusMsg.textContent = 'Code sent! Check your inbox (and spam folder).';
@@ -1745,15 +1749,22 @@
                     startOtpTimer();
                     return;
                 } else {
-                    throw new Error('EmailJS returned: ' + result.text);
+                    throw new Error('EmailJS returned status ' + (result ? result.status : 'unknown'));
                 }
             } catch (err) {
-                console.warn('OTP send failed:', err);
-                if (err.message && err.message.includes('Public Key')) {
-                    otpStatusMsg.textContent = 'EmailJS is not configured yet. Please set your Public Key, Service ID, and Template ID at the top of the JavaScript section.';
+                console.error('OTP send error:', err);
+                let msg = '';
+                const errStr = (err && err.message) ? err.message : String(err);
+                if (errStr.includes('Public Key') || errStr.includes('public key')) {
+                    msg = 'EmailJS Public Key is invalid. Check the key at the top of the JS section.';
+                } else if (errStr.includes('service') || errStr.includes('Service')) {
+                    msg = 'EmailJS Service ID "' + EMAILJS_SERVICE_ID + '" not found. Check your EmailJS dashboard.';
+                } else if (errStr.includes('template') || errStr.includes('Template') || errStr.includes('form')) {
+                    msg = 'EmailJS Template "' + EMAILJS_TEMPLATE_ID + '" not found. Check your EmailJS dashboard.';
                 } else {
-                    otpStatusMsg.textContent = 'Failed to send code. Please check the email address or try again.';
+                    msg = 'Failed to send code. Error: ' + errStr;
                 }
+                otpStatusMsg.textContent = msg;
                 otpStatusMsg.className = 'otp-status-msg error';
                 this.textContent = 'Send Verification Code';
                 this.disabled = false;
