@@ -1,22 +1,23 @@
-# wp_intaker
+# Website Survey — Client Intake Form
 
-A 100% free, static, client-facing business intake form for a WordPress + opencode studio.
+A self-contained, single-file website request form for **AM Worx Studio**. Collects client project details with live price estimation, then emails the submission summary.
 
 ## What it does
-- Public survey link (hosted on GitHub Pages).
-- Live cost estimate updates as the client answers.
-- On submit, automatically emails you + the client a PDF estimate.
-- Stores every response in Google Sheets (free integration).
-- A password-protected `/admin/` page lets you tweak pricing rules and email copy without editing code.
+- **7-section survey**: Hosting/Domain, Business Info, Website Type & Pages, Features, Design & Content, Timeline & Maintenance, Budget
+- **Live price estimate** — updates as the client fills out the form
+- **Sticky price bar** — always visible as the client scrolls
+- **Price breakdown modal** — detailed line-item cost breakdown
+- **FormSubmit.co integration** — sends submission to `amworxx@gmail.com` + CC's the client
+- **Summary display** — shows a full summary after submission with copy-to-clipboard
+- **No build step** — single HTML file, ready to deploy
 
 ## Stack (all free)
 | Concern | Tool |
 |---|---|
 | Hosting | GitHub Pages |
 | Form receiver | FormSubmit.co (unlimited free, supports `_cc`) |
-| Records | Google Sheets |
-| PDF | jsPDF (CDN) |
-| Admin saves | GitHub Contents API |
+| Design | Vanilla HTML / CSS / JS (no framework, no build) |
+| Font | Inter (Google Fonts) |
 
 ## File layout
 ```
@@ -24,31 +25,34 @@ wp_intaker/
 ├── AGENTS.md
 ├── README.md
 ├── .gitignore
-├── docs/
-├── plans/
-├── tasks/
+├── .nojekyll
+├── index.html          ← single-file survey (at repo root for Pages)
 ├── memory/
-├── index.html          # public survey (at repo root for Pages)
-├── admin/
-│   └── index.html      # mini-dashboard
-├── css/
-│   └── style.css
-├── js/
-│   ├── app.js          # survey logic + cost engine + PDF
-│   └── admin.js        # dashboard read/write settings.json
-└── settings/
-    └── defaults.json   # initial pricing rules + studio profile
+│   ├── events.md
+│   ├── lessons.md
+│   ├── patterns.md
+│   ├── decisions.md
+│   └── playbooks.md
+├── plans/
+└── tasks/
 ```
 
 ## Quick start
-1. Open `settings/defaults.json` and replace placeholder studio name/email with yours. (Optional: do this via `/admin/` instead.)
-2. Confirm your email at `https://formsubmit.co/YOUR_EMAIL` (one-time FormSubmit activation).
-3. To use `/admin/`, generate a GitHub PAT (Settings → Developer Settings → Personal access tokens → Fine-grained → Contents: Write → scope to this repo only), then store it in the admin page.
-4. Enable Pages (Settings → Pages → source: `main`, folder: `/` (root)).
+1. Confirm your email at `https://formsubmit.co/amworxx@gmail.com` (one-time FormSubmit activation — check your inbox for the confirmation email).
+2. Enable Pages (Settings → Pages → source: `main`, folder: `/` (root)).
+3. Share the Pages URL with clients.
 
-## Cost calculation
-The pricing engine is a single pure function in `js/app.js` — `calculateEstimate(answers, settings)`. Pricing rules live in `settings.json` so you can tune them without touching JS.
+## Pricing
+Prices are embedded directly in the HTML `data-price` attributes and in the JS calculation engine. To update rates, edit:
+- `data-price` attributes on each input in `index.html`
+- JS logic in the `calculate()` function (~line 1186)
+
+## Submission flow
+1. Client fills out the survey and clicks Submit.
+2. **Studio email** — FormSubmit sends `amworxx@gmail.com` the full detailed submission with all answers + pricing.
+3. **Client email** — A separate confirmation email is sent to the client (friendly summary, no pricing details).
+4. A summary box appears on-screen with a "Copy to Clipboard" button as fallback.
 
 ## Notes
-- All third-party deps loaded via public CDN. There is no `node_modules`.
-- Source of truth is `settings.json`. Source HTML and JS reference values via the loader.
+- All assets are self-contained in `index.html` (embedded CSS + JS). No external dependencies except the Google Font (Inter).
+- To use a custom domain, configure it in the GitHub Pages settings and update the `CNAME` file if needed.
