@@ -93,7 +93,7 @@ function renderedEstimateHTML(est) {
     <p class="note">This is a guideline, not a fixed quote. Final price depends on content complexity, revisions, and timeline.</p>
     <div class="hosting">
       <strong>Hostinger plan:</strong>
-      <ul style="margin:6px 0 0 18px; padding:0; color:var(--color-muted);">
+      <ul>
         ${recommendedHostingHTML(settings.pricing.hostinger.tiers)}
       </ul>
     </div>
@@ -200,14 +200,41 @@ function refreshEstimate() {
   q("estimate-body").innerHTML = renderedEstimateHTML(est);
 }
 
-/* ── Show/hide conditional fields ───────────────────────── */
+/* ── Progress tracking via IntersectionObserver ─────────── */
+function initProgressTracking() {
+  const sections = document.querySelectorAll(".section");
+  const steps = document.querySelectorAll(".step-link");
+  if (!sections.length || !steps.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      let activeIdx = 0;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const idx = Array.from(sections).indexOf(entry.target);
+          if (idx >= 0) activeIdx = Math.max(activeIdx, idx);
+        }
+      });
+      steps.forEach((step, i) => {
+        step.classList.remove("active", "done");
+        if (i < activeIdx) step.classList.add("done");
+        if (i === activeIdx) step.classList.add("active");
+      });
+    },
+    { threshold: 0.25, rootMargin: "-80px 0px 0px 0px" }
+  );
+
+  sections.forEach((s) => observer.observe(s));
+}
+
+/* ── Show/hide conditional fields (animated) ────────────── */
 function applyVisibility() {
   document.querySelectorAll("[data-show-if]").forEach((wrap) => {
     const { field, equals, contains } = JSON.parse(wrap.dataset.showIf);
     let show = false;
     if (equals !== undefined) show = answers[field] === equals;
     else if (contains !== undefined) show = (answers[field] || []).includes(contains);
-    wrap.style.display = show ? "" : "none";
+    wrap.classList.toggle("field-hidden", !show);
   });
 }
 
@@ -329,10 +356,14 @@ async function submitForm(e) {
     const est = calculateEstimate(answers, settings);
     generatePDF(answers, est);
 
-    alert("Thanks! We received your answers. A copy of your estimate has been downloaded, and we'll email you at " + (answers.client_email || "your email") + ".");
-    // Redirect to thanks-like state
-    q("intake").innerHTML = `<div class="section"><h2>Submitted ✓</h2><p>We'll be in touch ${settings.studio.replyTime}. Check your inbox for a copy of your estimate PDF.</p></div>`;
-    hide("estimate");
+    // Show styled success state
+    q("intake").innerHTML = `
+      <div class="section submitted-state">
+        <div class="check-icon">✓</div>
+        <h2>Thanks, ${answers.client_name || "friend"}!</h2>
+        <p>We received your answers and we'll be in touch ${settings.studio.replyTime}. A PDF estimate has been downloaded — check your inbox for a copy too.</p>
+      </div>`;
+    q("estimate-body").innerHTML = `<p>Submitted. We'll be in touch ${settings.studio.replyTime}.</p>`;
   } catch (err) {
     console.error(err);
     alert("Submission failed. Please email us directly at " + settings.studio.email);
@@ -357,6 +388,7 @@ async function init() {
 
     renderSections();
     refreshEstimate();
+    initProgressTracking();
     hide("loading");
     show("app");
 

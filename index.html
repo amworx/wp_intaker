@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Project Intake — {{studio.name}}</title>
-<link rel="stylesheet" href="css/style.css?v=2" />
+<link rel="stylesheet" href="css/style.css?v=3" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -21,8 +21,17 @@
     <div id="app" class="hidden">
       <div class="intro">
         <h1>Tell us about your project</h1>
-        <p>This survey takes about 5–8 minutes. Your estimate updates live as you answer. There’s no commitment — we’ll reply within 48 hours with a tailored proposal.</p>
+        <p>This survey takes about 5–8 minutes. Your estimate updates live as you answer. There's no commitment — we'll reply within 48 hours with a tailored proposal.</p>
       </div>
+
+      <!-- Progress steps -->
+      <ol class="progress-steps" id="progress" aria-label="Survey progress">
+        <li><span class="step-link" data-step="0"><span class="step-number">1</span><span class="step-label-text"> Basics</span></span></li>
+        <li><span class="step-link" data-step="1"><span class="step-number">2</span><span class="step-label-text"> Content</span></span></li>
+        <li><span class="step-link" data-step="2"><span class="step-number">3</span><span class="step-label-text"> Features</span></span></li>
+        <li><span class="step-link" data-step="3"><span class="step-number">4</span><span class="step-label-text"> Hosting</span></span></li>
+        <li><span class="step-link" data-step="4"><span class="step-number">5</span><span class="step-label-text"> Budget</span></span></li>
+      </ol>
 
       <form id="intake" method="POST" novalidate>
         <div id="sections"></div>
@@ -41,16 +50,16 @@
 
     <div id="error" class="hidden error-state">
       <h2>Something went wrong</h2>
-      <p>We couldn’t load the survey. Please <a href="mailto:{{studio.email}}">email us</a> directly.</p>
+      <p>We couldn't load the survey. Please <a href="mailto:{{studio.email}}">email us</a> directly.</p>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <small>© {{studio.name}}. Share this link freely.</small>
+      <small>&copy; {{studio.name}}. Share this link freely.</small>
     </div>
   </footer>
 
-<script src="js/app.js?v=2"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>
