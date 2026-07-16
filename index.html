@@ -1753,16 +1753,29 @@
                 }
             } catch (err) {
                 console.error('OTP send error:', err);
-                let msg = '';
-                const errStr = (err && err.message) ? err.message : String(err);
-                if (errStr.includes('Public Key') || errStr.includes('public key')) {
-                    msg = 'EmailJS Public Key is invalid. Check the key at the top of the JS section.';
-                } else if (errStr.includes('service') || errStr.includes('Service')) {
-                    msg = 'EmailJS Service ID "' + EMAILJS_SERVICE_ID + '" not found. Check your EmailJS dashboard.';
-                } else if (errStr.includes('template') || errStr.includes('Template') || errStr.includes('form')) {
-                    msg = 'EmailJS Template "' + EMAILJS_TEMPLATE_ID + '" not found. Check your EmailJS dashboard.';
+                let errDetail = '';
+                // EmailJS rejects with {status, text} object
+                if (err && typeof err === 'object') {
+                    if (err.text) errDetail = err.text + ' (status ' + err.status + ')';
+                    else if (err.message) errDetail = err.message;
+                    else errDetail = 'status ' + err.status;
+                } else if (typeof err === 'string') {
+                    errDetail = err;
                 } else {
-                    msg = 'Failed to send code. Error: ' + errStr;
+                    errDetail = 'unknown error';
+                }
+                let msg = '';
+                const lower = errDetail.toLowerCase();
+                if (lower.includes('public key')) {
+                    msg = 'EmailJS Public Key is invalid. Check the key in the JS config.';
+                } else if (lower.includes('service') || errDetail.includes('404')) {
+                    msg = 'EmailJS Service "' + EMAILJS_SERVICE_ID + '" not found. Check your EmailJS dashboard → Email Services.';
+                } else if (lower.includes('template') || lower.includes('form')) {
+                    msg = 'EmailJS Template "' + EMAILJS_TEMPLATE_ID + '" not found. Check your EmailJS dashboard → Email Templates.';
+                } else if (lower.includes('network') || lower.includes('fetch')) {
+                    msg = 'Network error. Check your internet connection.';
+                } else {
+                    msg = 'EmailJS error: ' + errDetail;
                 }
                 otpStatusMsg.textContent = msg;
                 otpStatusMsg.className = 'otp-status-msg error';
