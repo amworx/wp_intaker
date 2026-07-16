@@ -456,6 +456,33 @@
         .copy-btn:hover {
             background: #15803d;
         }
+        /* ===== EMAIL STATUS IN SUMMARY ===== */
+        .email-status {
+            margin: 12px 0;
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e8ecf1;
+        }
+        .email-status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 4px 0;
+            color: #64748b;
+        }
+        .email-status-item.success {
+            color: #166534;
+        }
+        .email-status-item.error {
+            color: #dc2626;
+        }
+        .email-status-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
         .error-msg {
             color: #dc2626;
             font-size: 13px;
@@ -1386,6 +1413,16 @@
             <div class="summary-box" id="summaryBox">
                 <h3>Thank you! Your request has been submitted.</h3>
                 <p>Here is a copy of what you selected. You can save or screenshot this for your records.</p>
+                <div class="email-status" id="emailStatus">
+                    <div class="email-status-item" id="studioEmailStatus">
+                        <span class="email-status-icon">⏳</span>
+                        <span>Sending to studio...</span>
+                    </div>
+                    <div class="email-status-item" id="clientEmailStatus">
+                        <span class="email-status-icon">⏳</span>
+                        <span>Sending confirmation to your email...</span>
+                    </div>
+                </div>
                 <pre id="summaryText"></pre>
                 <button type="button" class="copy-btn" id="copySummaryBtn">Copy to Clipboard</button>
             </div>
@@ -2004,33 +2041,59 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            // ——— Send full submission to studio (amworxx@gmail.com) ———
-            try {
-                const studioData = new FormData(this);
-                attachFilesToFormData(studioData);
-                studioData.append('_ajax', 'true');
-                studioData.append('_subject', 'New Website Survey - ' + name);
-                studioData.append('_summary', summary);
-
-                const resp = await fetch(FORM_SUBMIT_URL, {
-                    method: 'POST',
-                    body: studioData
-                });
-
-                if (resp.ok) {
-                    const result = await resp.json();
-                    if (!result.success) {
-                        console.warn('FormSubmit (studio) returned:', result.message);
-                    }
-                } else {
-                    console.warn('FormSubmit (studio) returned status', resp.status);
-                }
-            } catch (err) {
-                console.warn('FormSubmit (studio) failed:', err);
+            // ——— Helper to update email status indicators ———
+            function setEmailStatus(id, ok, msg) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const icon = el.querySelector('.email-status-icon');
+                el.className = 'email-status-item ' + (ok ? 'success' : 'error');
+                icon.textContent = ok ? '✓' : '✗';
+                el.querySelector('span:last-child').textContent = msg;
             }
 
+            // ——— Send full submission to studio (amworxx@gmail.com) ———
+            (async () => {
+                try {
+                    const studioData = new FormData(this);
+                    attachFilesToFormData(studioData);
+                    studioData.append('_ajax', 'true');
+                    studioData.append('_subject', 'New Website Survey - ' + name);
+                    studioData.append('_summary', summary);
+
+                    const resp = await fetch(FORM_SUBMIT_URL, {
+                        method: 'POST',
+                        body: studioData
+                    });
+
+                    if (resp.ok) {
+                        const result = await resp.json().catch(() => ({}));
+                        if (result && result.success === false) {
+                            setEmailStatus('studioEmailStatus', false, 'Studio email failed: ' + (result.message || 'unknown'));
+                        } else {
+                            setEmailStatus('studioEmailStatus', true, 'Sent to studio ✓');
+                        }
+                    } else {
+                        setEmailStatus('studioEmailStatus', false, 'Studio email error (status ' + resp.status + ')');
+                    }
+                } catch (err) {
+                    console.warn('FormSubmit (studio) failed:', err);
+                    setEmailStatus('studioEmailStatus', false, 'Studio email failed: ' + err.message);
+                }
+            })();
+
             // ——— Send confirmation to client via EmailJS ———
-            if (email) {
+            (async () => {
+                if (!email) {
+                    setEmailStatus('clientEmailStatus', true, 'No email to send confirmation to');
+                    return;
+                }
+                const clientStatusEl = document.getElementById('clientEmailStatus');
+                if (clientStatusEl) {
+                    clientStatusEl.className = 'email-status-item';
+                    const icon = clientStatusEl.querySelector('.email-status-icon');
+                    if (icon) icon.textContent = '⏳';
+                    clientStatusEl.querySelector('span:last-child').textContent = 'Sending confirmation...';
+                }
                 try {
                     const now = new Date();
                     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -2043,13 +2106,6 @@
                         if (ua.includes('Safari')) return 'Safari';
                         return 'Unknown browser';
                     })();
-
-                    const bizName = formData.get('business_name') || 'your business';
-                    const total = document.getElementById('calculatedTotal').value;
-                    let confirmMsg = 'Hi ' + name + ',\n\n';
-                    confirmMsg += 'Thank you for submitting your website request for ' + bizName + '!\n';
-                    confirmMsg += 'Estimated total: $' + total + '\n\n';
-                    confirmMsg += 'I will review your answers and get back to you within 24 hours.';
 
                     const templateParams = {
                         email: email,
@@ -2072,14 +2128,17 @@
                         templateParams
                     );
 
-                    if (clientResult.status !== 200 && clientResult.text !== 'OK') {
-                        console.warn('EmailJS (client) returned:', clientResult.text);
+                    if (clientResult && clientResult.status === 200 && clientResult.text === 'OK') {
+                        setEmailStatus('clientEmailStatus', true, 'Confirmation sent ✓');
+                    } else {
+                        const msg = (clientResult && clientResult.text) || 'unknown error';
+                        setEmailStatus('clientEmailStatus', false, 'Confirmation failed: ' + msg);
                     }
                 } catch (err) {
                     console.warn('EmailJS (client) failed:', err);
-                    // Client still has the on-screen summary + copy button
+                    setEmailStatus('clientEmailStatus', false, 'Confirmation failed: ' + (err.message || 'unknown error'));
                 }
-            }
+            })();
 
             btn.classList.remove('loading');
             btn.disabled = false;
