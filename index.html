@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* ===== RESET & BASE ===== */
         *,
@@ -1903,6 +1904,167 @@
             return m + ':' + (s < 10 ? '0' : '') + s;
         }
 
+        // =====================================================================
+        //  PDF GENERATION — produces a professional PDF with ALL form data
+        // =====================================================================
+        function generateSubmissionPdf(form, selectedFiles, total) {
+            const fd = new FormData(form);
+
+            function val(key) { return fd.get(key) || '—'; }
+            function allVals(key) {
+                const arr = fd.getAll(key);
+                return arr.length > 0 ? arr.join(', ') : '—';
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const M = 20;           // margin
+            const PW = doc.internal.pageSize.getWidth();
+            let y = M;
+
+            // Helpers
+            function wrap(text, size, maxW) {
+                const lines = doc.splitTextToSize(String(text || '—'), maxW);
+                return lines;
+            }
+
+            function writeLine(text, size, indent, style) {
+                const lines = wrap(text, size, contentWidth);
+                lines.forEach((line, i) => {
+                    if (y > 277) { doc.addPage(); y = M; }
+                    if (style === 'bold') doc.setFont(undefined, 'bold');
+                    else doc.setFont(undefined, 'normal');
+                    doc.text(line, M + (indent || 0), y);
+                    y += (i === lines.length - 1 ? 5 : 3.5);
+                });
+            }
+
+            function section(title, fields) {
+                if (y > 260) { doc.addPage(); y = M; }
+                // Section heading
+                doc.setFontSize(13);
+                doc.setTextColor(22, 101, 52);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, M, y);
+                y += 7;
+                // Fields
+                doc.setFontSize(10);
+                doc.setTextColor(50, 50, 50);
+                fields.forEach(f => {
+                    if (y > 275) { doc.addPage(); y = M; }
+                    const label = f.label;
+                    const value = String(f.value || '—');
+                    doc.setFont(undefined, 'bold');
+                    doc.text(label + ':  ', M + 5, y);
+                    const labelW = doc.getTextWidth(label + ':  ');
+                    doc.setFont(undefined, 'normal');
+                    const remaining = contentWidth - labelW - 5;
+                    const valLines = wrap(value, 10, remaining);
+                    valLines.forEach((vl, vi) => {
+                        const xPos = vi === 0 ? M + 5 + labelW : M + 10;
+                        if (y > 275) { doc.addPage(); y = M; }
+                        doc.text(vl, xPos, y);
+                        y += 5;
+                    });
+                });
+                y += 3;
+            }
+
+            const contentWidth = PW - 2 * M;
+
+            // Header
+            doc.setFontSize(22);
+            doc.setTextColor(22, 101, 52);
+            doc.setFont(undefined, 'bold');
+            const titleLines = wrap('AM Worx Studio — Website Request', 22, contentWidth);
+            titleLines.forEach((l, i) => { doc.text(l, M, y); y += (i === 0 ? 9 : 7); });
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.setFont(undefined, 'normal');
+            doc.text('Submitted: ' + new Date().toLocaleString(), M, y);
+            y += 6;
+            const totalDisp = total || fd.get('calculated_total') || '0';
+            doc.text('Estimated Total: $' + totalDisp, M, y);
+            y += 8;
+            // Divider
+            doc.setDrawColor(22, 101, 52);
+            doc.setLineWidth(0.7);
+            doc.line(M, y, PW - M, y);
+            y += 10;
+
+            // ── Section 1: Personal Information ──
+            section('Personal Information', [
+                { label: 'Full Name', value: fd.get('full_name') },
+                { label: 'Business', value: fd.get('business_name') },
+                { label: 'Email', value: fd.get('client_email') },
+                { label: 'Phone', value: fd.get('client_phone') },
+                { label: 'Description', value: fd.get('business_desc') }
+            ]);
+
+            // ── Section 2: Domain & Hosting ──
+            section('Domain & Hosting', [
+                { label: 'Domain', value: fd.get('domain') },
+                { label: 'Domain Idea', value: fd.get('domain_idea') },
+                { label: 'Hosting', value: fd.get('hosting') },
+                { label: 'Business Email', value: fd.get('email') },
+                { label: 'Email Accounts', value: fd.get('email_count') },
+                { label: 'Setup Help', value: fd.get('setup_help') }
+            ]);
+
+            // ── Section 3: Website Type & Pages ──
+            section('Website Type & Pages', [
+                { label: 'Type', value: fd.get('website_type') },
+                { label: 'Pages Selected', value: allVals('page') },
+                { label: 'Other Pages', value: fd.get('other_pages') }
+            ]);
+
+            // ── Section 4: Features ──
+            section('Features & Functionality', [
+                { label: 'Features', value: allVals('feature') }
+            ]);
+
+            // ── Section 5: Design & Content ──
+            section('Design & Content', [
+                { label: 'Logo', value: fd.get('logo') },
+                { label: 'Text Content', value: fd.get('content_text') },
+                { label: 'Photos', value: fd.get('content_photos') },
+                { label: 'Brand Colors', value: fd.get('brand_colors') },
+                { label: 'Inspiration Links', value: fd.get('inspiration_links') }
+            ]);
+
+            // ── Section 6: Timeline & Maintenance ──
+            section('Timeline & Maintenance', [
+                { label: 'Timeline', value: fd.get('timeline') },
+                { label: 'Maintenance', value: fd.get('maintenance') }
+            ]);
+
+            // ── Section 7: Budget ──
+            section('Budget & Notes', [
+                { label: 'Budget Range', value: fd.get('budget') },
+                { label: 'Extra Notes', value: fd.get('extra_notes') },
+                { label: 'Est. Total', value: '$' + (totalDisp) }
+            ]);
+
+            // ── Uploaded Files ──
+            const fileNames = selectedFiles.map(f => '  • ' + f.name).join('\n');
+            section('Uploaded Files (' + selectedFiles.length + ')', [
+                { label: 'Files', value: fileNames || 'None' }
+            ]);
+
+            // Page numbers
+            const pc = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pc; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(180, 180, 180);
+                doc.setFont(undefined, 'normal');
+                doc.text('AM Worx Studio — Page ' + i + ' of ' + pc, M, 295);
+            }
+
+            const blob = doc.output('blob');
+            return new File([blob], 'Website-Request-' + Date.now() + '.pdf', { type: 'application/pdf' });
+        }
+
         // Reset verification if email changes (before verification)
         document.getElementById('client_email').addEventListener('input', function() {
             if (!isEmailVerified) {
@@ -1957,6 +2119,16 @@
             attachFilesToFormData(formData);
             formData.set('_subject', 'New Website Survey - ' + name);
             formData.set('_captcha', 'false');
+            formData.set('_template', 'table');
+
+            // Generate PDF attachment
+            try {
+                const total = document.getElementById('calculatedTotal').value;
+                const pdfFile = generateSubmissionPdf(this, selectedFiles, total);
+                formData.append('file_upload[]', pdfFile);
+            } catch (err) {
+                console.warn('PDF generation failed (submission continues):', err);
+            }
 
             // Show thank-you
             const thankyouBox = document.getElementById('thankyouBox');
