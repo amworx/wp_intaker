@@ -1441,11 +1441,18 @@
         const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
 
         // =====================================================================
-        //  EMAILJS CONFIG (for OTP + client confirmation)
+        //  EMAILJS CONFIG (for OTP + studio notifications)
         //  Sign up free at https://www.emailjs.com/
         //  1. Create an Email Service  →  copy Service ID
-        //  2. Create an Email Template  →  use variables: {{email}}, {{passcode}}, {{company_name}}, etc.
+        //  2. Template 'otp_template' with variables: {{email}}, {{passcode}}, {{company_name}}, etc.
         //  3. Go to Account → API Keys  →  copy Public Key
+        //
+        //  FOR PDF ATTACHMENTS: In EmailJS dashboard → Templates → edit otp_template
+        //  → Attachments tab → Add Variable Attachment
+        //    - Parameter name: pdf_attachment
+        //    - Filename: {{pdf_filename}}
+        //    - Content type: PDF
+        //  This sends the PDF to amworxx@gmail.com with every submission.
         // =====================================================================
         const EMAILJS_PUBLIC_KEY = 'UVIFF194EIvto7_0v';
         const EMAILJS_SERVICE_ID = 'otp_wp_intake';
@@ -2117,17 +2124,74 @@
             // Build FormData for FormSubmit
             const formData = new FormData(this);
             attachFilesToFormData(formData);
-            formData.set('_subject', 'New Website Survey - ' + name);
+            formData.set('_subject', 'New Website Request - ' + name);
             formData.set('_captcha', 'false');
-            formData.set('_template', 'table');
 
-            // Generate PDF attachment
+            // Build human-readable summary for FormSubmit body
+            let summary = 'NEW WEBSITE REQUEST\n';
+            summary += 'From: ' + (formData.get('full_name') || '—') + '\n';
+            summary += 'Business: ' + (formData.get('business_name') || '—') + '\n';
+            summary += 'Email: ' + (formData.get('client_email') || '—') + '\n';
+            summary += 'Phone: ' + (formData.get('client_phone') || '—') + '\n\n';
+
+            summary += '── Domain & Hosting ──\n';
+            summary += 'Domain: ' + (formData.get('domain') || '—') + '\n';
+            summary += 'Domain Idea: ' + (formData.get('domain_idea') || '—') + '\n';
+            summary += 'Hosting: ' + (formData.get('hosting') || '—') + '\n';
+            summary += 'Business Email: ' + (formData.get('email') || '—') + '\n';
+            summary += 'Email Accounts: ' + (formData.get('email_count') || '—') + '\n';
+            summary += 'Setup Help: ' + (formData.get('setup_help') || '—') + '\n\n';
+
+            summary += '── Business Info ──\n';
+            summary += 'Description: ' + (formData.get('business_desc') || '—') + '\n\n';
+
+            summary += '── Website Type & Pages ──\n';
+            summary += 'Type: ' + (formData.get('website_type') || '—') + '\n';
+            summary += 'Pages: ' + (formData.getAll('page').join(', ') || '—') + '\n';
+            summary += 'Other Pages: ' + (formData.get('other_pages') || '—') + '\n\n';
+
+            summary += '── Features ──\n';
+            summary += 'Selected: ' + (formData.getAll('feature').join(', ') || '—') + '\n\n';
+
+            summary += '── Design & Content ──\n';
+            summary += 'Logo: ' + (formData.get('logo') || '—') + '\n';
+            summary += 'Text Content: ' + (formData.get('content_text') || '—') + '\n';
+            summary += 'Photos: ' + (formData.get('content_photos') || '—') + '\n';
+            summary += 'Brand Colors: ' + (formData.get('brand_colors') || '—') + '\n';
+            summary += 'Inspiration: ' + (formData.get('inspiration_links') || '—') + '\n\n';
+
+            summary += '── Timeline & Maintenance ──\n';
+            summary += 'Timeline: ' + (formData.get('timeline') || '—') + '\n';
+            summary += 'Maintenance: ' + (formData.get('maintenance') || '—') + '\n\n';
+
+            summary += '── Budget ──\n';
+            summary += 'Range: ' + (formData.get('budget') || '—') + '\n';
+            summary += 'Extra Notes: ' + (formData.get('extra_notes') || '—') + '\n\n';
+
+            const totalVal = document.getElementById('calculatedTotal').value;
+            summary += 'ESTIMATED TOTAL: $' + (totalVal || '0') + '\n';
+
+            formData.set('_summary', summary);
+
+            // Generate PDF and convert to base64 for EmailJS attachment
+            let pdfBase64 = '';
+            let pdfGenerated = false;
             try {
-                const total = document.getElementById('calculatedTotal').value;
-                const pdfFile = generateSubmissionPdf(this, selectedFiles, total);
+                const pdfFile = generateSubmissionPdf(this, selectedFiles, totalVal);
+                const reader = new FileReader();
+                pdfBase64 = await new Promise((resolve, reject) => {
+                    reader.onload = () => {
+                        // Remove data:application/pdf;base64, prefix
+                        resolve(reader.result.split(',')[1]);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(pdfFile);
+                });
+                pdfGenerated = true;
+                // Also add PDF to FormSubmit (may work with /ajax/ endpoint)
                 formData.append('file_upload[]', pdfFile);
             } catch (err) {
-                console.warn('PDF generation failed (submission continues):', err);
+                console.warn('PDF generation failed:', err);
             }
 
             // Show thank-you
@@ -2149,29 +2213,65 @@
                 el.querySelector('span:last-child').textContent = msg;
             }
 
-            // ——— Send full submission to studio (amworxx@gmail.com) ———
-            (async () => {
+            // ——— Send to studio via FormSubmit + EmailJS (parallel) ———
+            let fsOk = false, ejOk = false;
+
+            const fsPromise = (async () => {
                 try {
                     const resp = await fetch(FORM_SUBMIT_URL, {
                         method: 'POST',
                         body: formData
                     });
-
                     if (resp.ok) {
                         const result = await resp.json().catch(() => ({}));
-                        if (result && result.success === false) {
-                            setEmailStatus('studioEmailStatus', false, 'Studio email failed: ' + (result.message || 'unknown'));
-                        } else {
-                            setEmailStatus('studioEmailStatus', true, 'Sent to studio ✓');
-                        }
-                    } else {
-                        setEmailStatus('studioEmailStatus', false, 'Studio email error (status ' + resp.status + ')');
+                        fsOk = !(result && result.success === false);
                     }
                 } catch (err) {
                     console.warn('FormSubmit failed:', err);
-                    setEmailStatus('studioEmailStatus', false, 'Studio email failed: ' + err.message);
                 }
             })();
+
+            const ejPromise = pdfGenerated ? (async () => {
+                try {
+                    const now = new Date();
+                    const browserStr = (function() {
+                        const ua = navigator.userAgent;
+                        if (ua.includes('Firefox')) return 'Firefox';
+                        if (ua.includes('Edg')) return 'Edge';
+                        if (ua.includes('Chrome')) return 'Chrome';
+                        if (ua.includes('Safari')) return 'Safari';
+                        return 'Unknown';
+                    })();
+
+                    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                        email: 'amworxx@gmail.com',
+                        to_email: 'amworxx@gmail.com',
+                        company_name: 'New Website Request',
+                        passcode: '',
+                        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        year: now.getFullYear().toString(),
+                        device: formData.get('full_name') || 'Client',
+                        browser: browserStr,
+                        location: 'New submission from ' + (formData.get('business_name') || 'website'),
+                        request_time: now.toLocaleString(),
+                        logo_url: 'https://amworx.github.io/wp_intaker/logo.png',
+                        support_url: 'mailto:amworxx@gmail.com',
+                        pdf_attachment: pdfBase64,
+                        pdf_filename: 'Website-Request-' + Date.now() + '.pdf'
+                    });
+                    ejOk = true;
+                } catch (err) {
+                    console.warn('EmailJS to studio failed:', err);
+                }
+            })() : Promise.resolve();
+
+            await Promise.all([fsPromise, ejPromise]);
+
+            if (fsOk || ejOk) {
+                setEmailStatus('studioEmailStatus', true, 'Delivered ✓');
+            } else {
+                setEmailStatus('studioEmailStatus', false, 'Delivery failed');
+            }
 
             btn.classList.remove('loading');
             btn.disabled = false;
