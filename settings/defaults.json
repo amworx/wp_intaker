@@ -12,6 +12,7 @@
     }
   },
   "pricing": {
+    "showEstimate": true,
     "base": {
       "label": "Starter site (homepage + 4 pages)",
       "amount": 1200
