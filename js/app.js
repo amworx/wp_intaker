@@ -360,6 +360,8 @@ async function init() {
     hide(q("loading"));
     show(q("app"));
 
+    // Set form endpoint for traditional POST compatibility (FormSubmit activation requirement)
+    q("intake").action = FORM_ENDPOINT_TPL(settings.form.endpointEmail || settings.studio.email);
     q("intake").addEventListener("submit", submitForm);
   } catch (e) {
     console.error(e);
