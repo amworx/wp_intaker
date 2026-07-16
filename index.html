@@ -1437,7 +1437,7 @@
         // Update them directly in the HTML above if you need different prices.
         // =====================================================================
 
-        const FORM_SUBMIT_URL = 'https://formsubmit.co/amworxx@gmail.com';
+        const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
 
         // =====================================================================
         //  EMAILJS CONFIG (for OTP + client confirmation)
@@ -1956,7 +1956,7 @@
             const formData = new FormData(this);
             attachFilesToFormData(formData);
             formData.set('_subject', 'New Website Survey - ' + name);
-            formData.set('_ajax', 'true');
+            formData.set('_captcha', 'false');
 
             // Show thank-you
             const thankyouBox = document.getElementById('thankyouBox');
