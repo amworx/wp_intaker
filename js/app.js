@@ -332,7 +332,7 @@ async function submitForm(e) {
     alert("Thanks! We received your answers. A copy of your estimate has been downloaded, and we'll email you at " + (answers.client_email || "your email") + ".");
     // Redirect to thanks-like state
     q("intake").innerHTML = `<div class="section"><h2>Submitted ✓</h2><p>We'll be in touch ${settings.studio.replyTime}. Check your inbox for a copy of your estimate PDF.</p></div>`;
-    hide(q("estimate"));
+    hide("estimate");
   } catch (err) {
     console.error(err);
     alert("Submission failed. Please email us directly at " + settings.studio.email);
@@ -357,16 +357,16 @@ async function init() {
 
     renderSections();
     refreshEstimate();
-    hide(q("loading"));
-    show(q("app"));
+    hide("loading");
+    show("app");
 
     // Set form endpoint for traditional POST compatibility (FormSubmit activation requirement)
     q("intake").action = FORM_ENDPOINT_TPL(settings.form.endpointEmail || settings.studio.email);
     q("intake").addEventListener("submit", submitForm);
   } catch (e) {
     console.error(e);
-    hide(q("loading"));
-    show(q("error"));
+    hide("loading");
+    show("error");
   }
 }
 
