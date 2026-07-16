@@ -39,10 +39,7 @@ function deb64(b64) {
 /* Fetch current file to obtain SHA (required for updates) */
 async function getFile({ owner, repo, path }) {
   const { token } = loadLS();
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=main`;
-  console.log('[ADMIN DEBUG] getFile called with:', JSON.stringify({ owner, repo, path }));
-  console.log('[ADMIN DEBUG] full URL:', url);
-  const r = await fetch(url, {
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=main`, {
     headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
   });
   if (!r.ok) throw new Error(`GET ${r.status}`);
@@ -94,7 +91,6 @@ async function loadSettings() {
   const { repo } = loadLS();
   if (!repo) return;
   const [owner, name] = repo.split("/");
-  console.log('[ADMIN DEBUG] loadSettings: repo from LS:', repo, '| owner:', owner, '| name:', name);
   try {
     const data = await getFile({ owner, repo: name, path: "settings/defaults.json" });
     const json = deb64(data.content);
