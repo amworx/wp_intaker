@@ -1425,7 +1425,7 @@
         //  EMAILJS CONFIG (for OTP + client confirmation)
         //  Sign up free at https://www.emailjs.com/
         //  1. Create an Email Service  →  copy Service ID
-        //  2. Create one Email Template  →  variables: {{to_email}}, {{otp_code}}, {{client_name}}, {{business_name}}, {{message}}, {{from_name}}
+        //  2. Create an Email Template  →  use variables: {{email}}, {{passcode}}, {{company_name}}, etc.
         //  3. Go to Account → API Keys  →  copy Public Key
         // =====================================================================
         const EMAILJS_PUBLIC_KEY = 'UVIFF194EIvto7_0v';
@@ -1722,15 +1722,32 @@
 
             try {
                 // Send OTP via EmailJS (no activation needed for recipient)
+                // Match the EmailJS template variables exactly
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const deviceStr = navigator.platform || 'Unknown device';
+                const browserStr = (function() {
+                    const ua = navigator.userAgent;
+                    if (ua.includes('Firefox')) return 'Firefox';
+                    if (ua.includes('Edg')) return 'Edge';
+                    if (ua.includes('Chrome')) return 'Chrome';
+                    if (ua.includes('Safari')) return 'Safari';
+                    return 'Unknown browser';
+                })();
+
                 const templateParams = {
-                    to_email: email,
                     email: email,
-                    to_name: email.split('@')[0],
-                    client_name: email.split('@')[0],
-                    from_name: 'AM Worx Studio',
-                    otp_code: generatedOtp,
-                    message: 'Your verification code is: ' + generatedOtp,
-                    business_name: ''
+                    to_email: email,
+                    company_name: 'AM Worx Studio',
+                    passcode: generatedOtp,
+                    time: timeStr,
+                    year: now.getFullYear().toString(),
+                    device: deviceStr,
+                    browser: browserStr,
+                    location: 'IP detected on login',
+                    request_time: now.toLocaleString(),
+                    logo_url: 'https://amworx.github.io/wp_intaker/logo.png',
+                    support_url: 'mailto:amworxx@gmail.com'
                 };
 
                 const result = await emailjs.send(
@@ -2012,33 +2029,47 @@
                 console.warn('FormSubmit (studio) failed:', err);
             }
 
-            // ——— Send confirmation to client via EmailJS (no activation needed) ———
+            // ——— Send confirmation to client via EmailJS ———
             if (email) {
                 try {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const deviceStr = navigator.platform || 'Unknown device';
+                    const browserStr = (function() {
+                        const ua = navigator.userAgent;
+                        if (ua.includes('Firefox')) return 'Firefox';
+                        if (ua.includes('Edg')) return 'Edge';
+                        if (ua.includes('Chrome')) return 'Chrome';
+                        if (ua.includes('Safari')) return 'Safari';
+                        return 'Unknown browser';
+                    })();
+
                     const bizName = formData.get('business_name') || 'your business';
                     const total = document.getElementById('calculatedTotal').value;
+                    let confirmMsg = 'Hi ' + name + ',\n\n';
+                    confirmMsg += 'Thank you for submitting your website request for ' + bizName + '!\n';
+                    confirmMsg += 'Estimated total: $' + total + '\n\n';
+                    confirmMsg += 'I will review your answers and get back to you within 24 hours.';
 
-                    let clientMessage = 'Hi ' + name + ',\n\n';
-                    clientMessage += 'Thank you for submitting your website request for ' + bizName + '!\n\n';
-                    clientMessage += 'Here is a quick overview:\n';
-                    clientMessage += '  Business: ' + bizName + '\n';
-                    clientMessage += '  Website type: ' + (formData.get('website_type') || '-') + '\n';
-                    clientMessage += '  Estimated budget range: $' + total + '\n\n';
-                    clientMessage += 'I will review your answers and get back to you within 24 hours with a detailed proposal.\n\n';
-                    clientMessage += 'If you have any questions in the meantime, feel free to reply to this email.\n\n';
-                    clientMessage += 'Best regards,\n';
-                    clientMessage += 'AM Worx Studio';
+                    const templateParams = {
+                        email: email,
+                        to_email: email,
+                        company_name: 'AM Worx Studio',
+                        passcode: '',
+                        time: timeStr,
+                        year: now.getFullYear().toString(),
+                        device: deviceStr,
+                        browser: browserStr,
+                        location: '',
+                        request_time: now.toLocaleString(),
+                        logo_url: 'https://amworx.github.io/wp_intaker/logo.png',
+                        support_url: 'mailto:amworxx@gmail.com'
+                    };
 
                     const clientResult = await emailjs.send(
                         EMAILJS_SERVICE_ID,
                         EMAILJS_TEMPLATE_ID,
-                        {
-                            to_email: email,
-                            client_name: name,
-                            business_name: bizName,
-                            message: clientMessage,
-                            from_name: 'AM Worx Studio'
-                        }
+                        templateParams
                     );
 
                     if (clientResult.status !== 200 && clientResult.text !== 'OK') {
