@@ -18,13 +18,12 @@
 | 3b | `email_count` | select | conditional | 1,2,3,5 (shown when email=need) | $15×count |
 | 4 | `setup_help` | radio | no | Yes, please handle everything / No, I'll do it myself | +$25 |
 
-### SECTION 2 — About You & Your Business (5 fields → now 6 with confirm)
+### SECTION 2 — About You & Your Business (5 fields + OTP verification)
 | # | Field Name | Type | Required | Values / Options | Price |
 |---|---|---|---|---|---|
 | 5 | `full_name` | text | **YES** | Free text | — |
 | 6 | `business_name` | text | no | Free text | — |
-| 7 | `client_email` | email | **YES** | Email format validated | — |
-| 7b | `client_email_confirm` | email | **YES** | Must match `client_email` | — |
+| 7 | `client_email` | email | **YES** | Email format validated + **OTP verified** | — |
 | 8 | `client_phone` | tel | no | Free text | — |
 | 9 | `business_desc` | textarea | no | Multi-line text | — |
 
@@ -133,14 +132,16 @@
 
 | Change | Location | Purpose |
 |---|---|---|
-| **Confirm email field** | Section 2 | Catches typos in client email |
+| **OTP email verification** | Section 2 | Sends 6-digit code to client email; must be verified before submit |
 | **Email format validation** | JS submit handler | Validates `user@domain.tld` pattern |
-| **Email mismatch check** | JS submit handler | Ensures both email fields match |
+| **OTP send + verify flow** | JS + FormSubmit | Generate code → send via email → user enters → verified ✓ |
+| **5-minute OTP expiry** | JS timer | Code auto-expires after 5 minutes; resend available |
+| **Email locked after verify** | Section 2 | Email set to read-only once verified |
 | **File upload input** | Section 5 | Accepts images, PDFs, docs (multiple) |
 | **File name display** | JS UI | Shows selected files with remove button |
 | **File attachment to POST** | JS submit handler | Attaches files to both studio + client emails |
 | **File info in summary** | Summary text | Lists uploaded file names |
-| **CSS for file upload** | Styles | Dashed dropzone, file list, remove buttons |
+| **CSS for file upload + OTP** | Styles | Dashed dropzone, OTP input, verified badge, timer |
 
 ---
 
@@ -154,12 +155,22 @@
 
 ---
 
-## 6. Email Validation Details
+## 6. Email Validation & OTP Verification Details
 
 | Check | Method | Error Message |
 |---|---|---|
 | Empty check | `if (!name \|\| !email)` | "Please fill in your name and a valid email address." |
 | Format check | `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` | "Please enter a valid email address (e.g. name@domain.com)." |
-| Confirm match | `email !== emailConfirm` | "Email addresses do not match." |
+| **OTP verification** | **6-digit code sent to email via FormSubmit** | "Please verify your email by clicking 'Send Verification Code'..." |
 
-All three checks run sequentially before any data is sent. Submission stops at the first failing check.
+### OTP Flow
+1. User enters email address
+2. Clicks **"Send Verification Code"**
+3. 6-digit code is generated and sent to user's email via FormSubmit.co
+4. Code expires in **5 minutes** (shown by countdown timer)
+5. User enters the code and clicks **"Verify"**
+6. On match: email is marked **✓ Verified** and locked (read-only)
+7. On mismatch: input is cleared, error shown, user can retry
+8. **"Resend code"** button appears after expiry
+
+All checks run sequentially before any data is sent. Submission stops at the first failing check. The **OTP verification is mandatory** — form cannot be submitted without it.
