@@ -175,10 +175,17 @@ function renderSections() {
   });
 }
 
-function onFieldChange() {
+function onFieldChange(e) {
   collectAnswers();
   refreshEstimate();
   applyVisibility();
+  // Clear field-level error on input
+  const wrap = e?.target?.closest(".field");
+  if (wrap) {
+    wrap.classList.remove("field-error");
+    const msg = wrap.querySelector(".field-error-msg");
+    if (msg) msg.remove();
+  }
 }
 
 function collectAnswers() {
@@ -236,6 +243,63 @@ function applyVisibility() {
     else if (contains !== undefined) show = (answers[field] || []).includes(contains);
     wrap.classList.toggle("field-hidden", !show);
   });
+}
+
+/* ── Field validation ───────────────────────────────────── */
+function validateRequiredFields() {
+  const fields = settings.form.fields;
+  const errors = [];
+
+  // Clear all existing field errors first
+  document.querySelectorAll(".field-error").forEach((el) => el.classList.remove("field-error"));
+  document.querySelectorAll(".field-error-msg").forEach((el) => el.remove());
+
+  for (const [fid, f] of Object.entries(fields)) {
+    if (!f.required) continue;
+    const wrap = document.getElementById(`wrap-${fid}`);
+    if (!wrap) continue;
+
+    // Skip hidden (conditional) fields
+    if (wrap.classList.contains("field-hidden")) continue;
+
+    const val = answers[fid];
+    const isEmpty = !val || (Array.isArray(val) && val.length === 0);
+
+    if (isEmpty) {
+      wrap.classList.add("field-error");
+      const msg = document.createElement("span");
+      msg.className = "field-error-msg";
+      msg.textContent = `${f.label} is required.`;
+      msg.id = `error-${fid}`;
+      msg.setAttribute("role", "alert");
+      const control = wrap.querySelector("input, select, textarea");
+      if (control) control.setAttribute("aria-invalid", "true");
+      // Insert after the last child in the field
+      const help = wrap.querySelector(".help");
+      if (help) {
+        help.after(msg);
+      } else {
+        const lastChild = wrap.querySelector(".check-group, input, select, textarea");
+        if (lastChild && lastChild.parentNode === wrap) lastChild.after(msg);
+        else wrap.appendChild(msg);
+      }
+      errors.push(fid);
+    } else {
+      const control = wrap.querySelector("input, select, textarea");
+      if (control) control.removeAttribute("aria-invalid");
+    }
+  }
+
+  return errors;
+}
+
+function focusFirstError(errors) {
+  if (!errors.length) return;
+  const first = document.getElementById(`wrap-${errors[0]}`);
+  if (first) {
+    const input = first.querySelector("input, select, textarea");
+    if (input) input.focus();
+  }
 }
 
 /* ── Submit & PDF ───────────────────────────────────────── */
@@ -338,6 +402,14 @@ function generatePDF(answers, est) {
 async function submitForm(e) {
   e.preventDefault();
   collectAnswers();
+
+  // Run inline validation first
+  const errors = validateRequiredFields();
+  if (errors.length > 0) {
+    focusFirstError(errors);
+    return;
+  }
+
   const submitBtn = q("intake").querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.textContent = "Submitting…";
@@ -391,6 +463,10 @@ async function init() {
     initProgressTracking();
     hide("loading");
     show("app");
+
+    // Focus first input for keyboard users
+    const firstInput = document.querySelector("#sections input, #sections select, #sections textarea");
+    if (firstInput) firstInput.focus();
 
     // Set form endpoint for traditional POST compatibility (FormSubmit activation requirement)
     q("intake").action = FORM_ENDPOINT_TPL(settings.form.endpointEmail || settings.studio.email);

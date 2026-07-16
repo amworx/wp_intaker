@@ -45,3 +45,21 @@ Append-only. Entry format: `EVT-YYYYMMDD-NNNN`.
 - Errors: none
 - Lessons: keeping the form receiver via FormSubmit (email + cc) and the records path via Apps Script alternative documented; admin token model documented as solo-studio acceptable trade-off.
 - Tags: [build, survey, formsubmit, github-pages, jspdf, admin-dashboard]
+
+## EVT-20260716-0003 — Design polish & mobile optimization
+
+- Timestamp: 2026-07-16 (local)
+- Mode: BUILD
+- Action: Applied design-taste-frontend skill to refine UI, add progress tracking, animate conditional fields, and optimize mobile layout.
+- Summary:
+  - CSS: full design system with custom properties, refined typography, improved form fields, checkbox card selected states, animated conditional fields (`.field-hidden`), staggered section entrance animations, `prefers-reduced-motion` support, 4-tier responsive breakpoints.
+  - HTML: added 5-step progress indicator (`<ol class="progress-steps">`), footer, cache-bust `?v=3`.
+  - JS: `IntersectionObserver`-based progress tracking updates step links, conditional fields use CSS class toggle for smooth slide transitions, styled success state replaces `alert()`.
+- Result: SUCCESS
+- Files affected:
+  - `css/style.css`
+  - `index.html`
+  - `js/app.js`
+- Errors: none
+- Lessons: CSS `max-height` + `opacity` + `transform` transition is a lightweight, no-library way to animate show/hide. `IntersectionObserver` with `rootMargin` accounts for sticky header height. Staggered `fadeInUp` on `.section` elements gives pleasant on-load animation without JS.
+- Tags: [design, polish, mobile, animation, accessibility, progress-tracker]

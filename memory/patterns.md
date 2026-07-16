@@ -21,3 +21,11 @@ For static-site admin that doesn't justify a backend, use the GitHub Contents AP
 ## PAT-20260716-0004 — Live cost calc as a pure function
 
 Make `calculateEstimate(answers, settings)` a pure function with no DOM access. This makes it trivially unit-testable, share-exportable, and reusable in PDF generation, summary emails, and the dashboard preview.
+
+## PAT-20260716-0005 — Animated conditional form fields via CSS class toggle
+
+Use CSS `max-height` + `opacity` + `transform` transitions on a `.field-hidden` class to animate field show/hide instead of inline `display: none`. JS toggles the class; CSS handles the transition. Include `pointer-events: none` to prevent interaction during animation. Respect `prefers-reduced-motion: reduce` to collapse all animations.
+
+## PAT-20260716-0006 — Section progress tracking via IntersectionObserver
+
+Use `IntersectionObserver` with `rootMargin` offset equal to sticky header height to track which form section is in view. Map section indices to progress step elements with `.active` (current) and `.done` (completed) classes for a lightweight, no-dependency progress indicator.

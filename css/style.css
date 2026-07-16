@@ -17,9 +17,12 @@
   --color-surface: #ffffff;
   --color-text: #0f172a;
   --color-secondary: #334155;
-  --color-muted: #64748b;
+  --color-muted: #475569;
   --color-border: #e2e8f0;
   --color-border-strong: #cbd5e1;
+
+  /* Text contrast variants (muted text must be >=4.5:1 on bg) */
+  --color-muted-text: #475569;
 
   /* Feedback */
   --color-success: #16a34a;
@@ -68,6 +71,28 @@
   --sidebar-width: 340px;
 }
 
+/* ── Skip Link (accessibility) ──────────────────────────── */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 8px;
+  z-index: 1000;
+  padding: 10px 18px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  text-decoration: none;
+  transition: top 150ms ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* ── Reset & Base ───────────────────────────────────────── */
 *,
 *::before,
@@ -95,6 +120,16 @@ body {
 img {
   max-width: 100%;
   display: block;
+}
+
+/* Improve tap behavior on mobile */
+button,
+input,
+select,
+textarea,
+.check-item,
+.btn-primary {
+  touch-action: manipulation;
 }
 
 /* ── Container ──────────────────────────────────────────── */
@@ -420,14 +455,20 @@ textarea {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color var(--transition-fast),
-    background var(--transition-fast), box-shadow var(--transition-fast);
+    background var(--transition-fast), box-shadow var(--transition-fast),
+    transform 100ms ease;
   user-select: none;
 }
 
 .check-item:hover {
   border-color: var(--color-primary-100);
   background: var(--color-primary-50);
+}
+
+.check-item:active {
+  transform: scale(0.99);
 }
 
 .check-item:has(input:checked) {
@@ -633,6 +674,22 @@ textarea {
   line-height: 1.6;
 }
 
+/* ── Field validation states ────────────────────────────── */
+.field.field-error input,
+.field.field-error select,
+.field.field-error textarea {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.field-error-msg {
+  display: block;
+  color: var(--color-error);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 /* ── Conditional field transitions ──────────────────────── */
 .field.field-hidden {
   opacity: 0;
@@ -661,35 +718,24 @@ textarea {
 }
 
 /* ── Animations ─────────────────────────────────────────── */
-.section {
-  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+/* Single entrance animation for form container — not per-section */
+#app {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.section:nth-child(1) {
-  animation-delay: 0s;
-}
-.section:nth-child(2) {
-  animation-delay: 0.1s;
-}
-.section:nth-child(3) {
-  animation-delay: 0.15s;
-}
-.section:nth-child(4) {
-  animation-delay: 0.2s;
-}
-.section:nth-child(5) {
-  animation-delay: 0.25s;
-}
-
-@keyframes fadeInUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
+}
+
+/* Section cards animate on hover only (meaningful — responds to user action) */
+.section {
+  transition: box-shadow var(--transition-base),
+    border-color var(--transition-base);
 }
 
 /* Respect reduced motion */
@@ -707,8 +753,123 @@ textarea {
     scroll-behavior: auto;
   }
 
-  .section {
+  #app {
     animation: none;
+  }
+}
+
+/* ── Dark Mode ──────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-text: #f1f5f9;
+    --color-secondary: #cbd5e1;
+    --color-muted: #94a3b8;
+    --color-border: #334155;
+    --color-border-strong: #475569;
+    --color-primary-100: #1e3a5f;
+    --color-primary-50: #172554;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.25),
+      0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.25),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .site-header {
+    background: rgba(15, 23, 42, 0.92);
+    border-bottom-color: var(--color-border);
+  }
+
+  #logo {
+    color: var(--color-text);
+  }
+
+  .badge {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-muted);
+  }
+
+  .section {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  .section:focus-within {
+    border-color: var(--color-primary-100);
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    background: #0f172a;
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8.5L1.5 4h9z'/%3E%3C/svg%3E");
+  }
+
+  .check-item {
+    background: #0f172a;
+    border-color: var(--color-border);
+  }
+
+  .check-item:hover {
+    border-color: var(--color-primary-100);
+    background: #1e293b;
+  }
+
+  .check-item:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-50);
+  }
+
+  .estimate {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  .estimate h2 {
+    border-bottom-color: var(--color-border);
+  }
+
+  .estimate .line {
+    color: var(--color-secondary);
+  }
+
+  .estimate .line.total {
+    border-top-color: var(--color-border);
+  }
+
+  .estimate .hosting {
+    border-top-color: var(--color-border);
+  }
+
+  .submitted-state .check-icon {
+    background: #14532d;
+    color: #86efac;
+  }
+
+  .submitted-state h2 {
+    color: var(--color-text);
+  }
+
+  .site-footer {
+    border-top-color: var(--color-border);
   }
 }
 
