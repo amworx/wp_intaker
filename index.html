@@ -492,6 +492,69 @@
         .btn-submit.loading .spinner {
             display: inline-block;
         }
+        /* ===== FILE UPLOAD ===== */
+        .file-upload-area {
+            margin-top: 4px;
+        }
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 28px 20px;
+            border: 2px dashed #dce1e8;
+            border-radius: 12px;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            text-align: center;
+        }
+        .file-upload-label:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .file-upload-icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+        .file-upload-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .file-upload-hint {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+        .file-list {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .file-list .file-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+        }
+        .file-list .file-item .remove-file {
+            color: #dc2626;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1;
+            background: none;
+            border: none;
+            padding: 0 4px;
+        }
+        .file-list .file-item .remove-file:hover {
+            color: #b91c1c;
+        }
     </style>
 </head>
 <body>
@@ -643,7 +706,12 @@
                 </div>
                 <div class="field-group">
                     <label>Your email</label>
-                    <input type="email" name="client_email" required />
+                    <input type="email" name="client_email" id="client_email" required placeholder="you@example.com" />
+                </div>
+                <div class="field-group">
+                    <label>Confirm your email <span class="hint">(to avoid typos)</span></label>
+                    <input type="email" name="client_email_confirm" id="client_email_confirm" required placeholder="you@example.com" />
+                    <div class="error-msg" id="emailMismatchError" style="margin-top:4px;">Email addresses do not match.</div>
                 </div>
                 <div class="field-group">
                     <label>Your phone number</label>
@@ -1016,6 +1084,19 @@
                     <label>Links to websites you like (for design inspiration)</label>
                     <input type="text" name="inspiration_links" placeholder="Paste links here, separated by commas" />
                 </div>
+
+                <div class="field-group">
+                    <label>Upload your logo, brand assets, or reference files</label>
+                    <div class="file-upload-area">
+                        <label class="file-upload-label" for="fileUpload">
+                            <span class="file-upload-icon">📎</span>
+                            <span class="file-upload-text" id="fileUploadText">Click to choose files (images, PDFs, documents)</span>
+                            <span class="file-upload-hint">Max 10MB per file</span>
+                        </label>
+                        <input type="file" name="file_upload" id="fileUpload" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.txt,.ai,.eps,.svg,.zip" />
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                </div>
             </div>
 
             <!-- ============================================================ -->
@@ -1135,7 +1216,8 @@
                     <span class="spinner"></span>
                 </button>
                 <div class="form-footer-note">I'll review your answers and send you a clear price quote within 24 hours.</div>
-                <div class="error-msg" id="formError">Please fill in your name and email address.</div>
+                <div class="error-msg" id="formError">Please fill in your name and a valid email address.</div>
+                <div class="error-msg" id="emailFormatError" style="margin-top:4px;">Please enter a valid email address (e.g. name@domain.com).</div>
             </div>
 
             <!-- ============================================================ -->
@@ -1360,6 +1442,58 @@
         });
 
         // =====================================================================
+        //  FILE UPLOAD — show selected file names
+        // =====================================================================
+        const fileInput = document.getElementById('fileUpload');
+        const fileList = document.getElementById('fileList');
+        const fileUploadText = document.getElementById('fileUploadText');
+        let selectedFiles = [];
+
+        fileInput.addEventListener('change', function() {
+            const newFiles = Array.from(this.files);
+            selectedFiles = selectedFiles.concat(newFiles);
+            renderFileList();
+            // Reset so change event fires again for the same file
+            this.value = '';
+        });
+
+        function renderFileList() {
+            if (selectedFiles.length === 0) {
+                fileList.innerHTML = '';
+                fileUploadText.textContent = 'Click to choose files (images, PDFs, documents)';
+                return;
+            }
+            fileUploadText.textContent = selectedFiles.length + ' file(s) selected';
+            let html = '';
+            selectedFiles.forEach((file, index) => {
+                const size = file.size > 1048576
+                    ? (file.size / 1048576).toFixed(1) + ' MB'
+                    : (file.size / 1024).toFixed(0) + ' KB';
+                html += '<div class="file-item">' +
+                    '<button type="button" class="remove-file" data-index="' + index + '" title="Remove file">&times;</button> ' +
+                    '<span>' + file.name + ' (' + size + ')</span>' +
+                    '</div>';
+            });
+            fileList.innerHTML = html;
+
+            // Attach remove handlers
+            fileList.querySelectorAll('.remove-file').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    selectedFiles.splice(idx, 1);
+                    renderFileList();
+                });
+            });
+        }
+
+        // Patch FormData before submit to include selected files
+        function attachFilesToFormData(formData) {
+            selectedFiles.forEach(file => {
+                formData.append('file_upload[]', file);
+            });
+        }
+
+        // =====================================================================
         //  FORM SUBMISSION
         // =====================================================================
         document.getElementById('surveyForm').addEventListener('submit', async function(e) {
@@ -1367,17 +1501,45 @@
 
             const name = this.querySelector('input[name="full_name"]')?.value?.trim();
             const email = this.querySelector('input[name="client_email"]')?.value?.trim();
+            const emailConfirm = this.querySelector('input[name="client_email_confirm"]')?.value?.trim();
 
-            // Validate
+            // Clear all errors
+            document.getElementById('formError').classList.remove('visible');
+            document.getElementById('emailFormatError').classList.remove('visible');
+            document.getElementById('emailMismatchError').classList.remove('visible');
             const errorEl = document.getElementById('formError');
+            const emailFormatEl = document.getElementById('emailFormatError');
+            const emailMismatchEl = document.getElementById('emailMismatchError');
+
+            // Validate name + email filled in
             if (!name || !email) {
                 errorEl.classList.add('visible');
+                if (errorEl.scrollIntoView) errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 return;
             }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                emailFormatEl.classList.add('visible');
+                if (emailFormatEl.scrollIntoView) emailFormatEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+
+            // Validate confirm email matches
+            if (email !== emailConfirm) {
+                emailMismatchEl.classList.add('visible');
+                if (emailMismatchEl.scrollIntoView) emailMismatchEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+
             errorEl.classList.remove('visible');
+            emailFormatEl.classList.remove('visible');
+            emailMismatchEl.classList.remove('visible');
 
             // Build summary text
             const formData = new FormData(this);
+            attachFilesToFormData(formData);
             let summary = '=== WEBSITE REQUEST SUMMARY ===\n\n';
             summary += 'From: ' + (formData.get('full_name') || '(not provided)') + '\n';
             summary += 'Business: ' + (formData.get('business_name') || '(not provided)') + '\n';
@@ -1420,6 +1582,14 @@
             summary += '--- Extra Notes ---\n';
             summary += (formData.get('extra_notes') || '-') + '\n\n';
 
+            summary += '--- Uploaded Files ---\n';
+            if (selectedFiles.length > 0) {
+                selectedFiles.forEach(f => { summary += '  - ' + f.name + '\n'; });
+            } else {
+                summary += '  (none)\n';
+            }
+            summary += '\n';
+
             const total = document.getElementById('calculatedTotal').value;
             summary += '=== ESTIMATED TOTAL: $' + total + ' ===\n';
 
@@ -1437,6 +1607,7 @@
             // ——— Send full submission to studio (amworxx@gmail.com) ———
             try {
                 const studioData = new FormData(this);
+                attachFilesToFormData(studioData);
                 studioData.append('_ajax', 'true');
                 studioData.append('_subject', 'New Website Survey - ' + name);
                 studioData.append('_summary', summary);
