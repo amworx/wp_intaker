@@ -1,6 +1,6 @@
 # wp_intaker
 
-A 100% free, static, client-facing business-blueprint intake form for a WordPress + opencode studio.
+A 100% free, static, client-facing business intake form for a WordPress + opencode studio.
 
 ## What it does
 - Public survey link (hosted on GitHub Pages).
@@ -28,24 +28,23 @@ wp_intaker/
 ├── plans/
 ├── tasks/
 ├── memory/
-└── src/
-    ├── index.html          # public survey
-    ├── admin/
-    │   └── index.html      # mini-dashboard
-    ├── css/
-    │   └── style.css
-    ├── js/
-    │   ├── app.js          # survey logic + cost engine + PDF
-    │   └── admin.js        # dashboard read/write settings.json
-    └── settings/
-        └── defaults.json   # initial pricing rules + studio profile
+├── index.html          # public survey (at repo root for Pages)
+├── admin/
+│   └── index.html      # mini-dashboard
+├── css/
+│   └── style.css
+├── js/
+│   ├── app.js          # survey logic + cost engine + PDF
+│   └── admin.js        # dashboard read/write settings.json
+└── settings/
+    └── defaults.json   # initial pricing rules + studio profile
 ```
 
 ## Quick start
-1. Open `src/settings/defaults.json` and replace placeholder studio name/email with yours. (Optional: do this via `/admin/` instead.)
-2. To enable FormSubmit for your own email, the first submission will ask you to confirm the email (one-time FormSubmit activation).
+1. Open `settings/defaults.json` and replace placeholder studio name/email with yours. (Optional: do this via `/admin/` instead.)
+2. Confirm your email at `https://formsubmit.co/YOUR_EMAIL` (one-time FormSubmit activation).
 3. To use `/admin/`, generate a GitHub PAT (Settings → Developer Settings → Personal access tokens → Fine-grained → Contents: Write → scope to this repo only), then store it in the admin page.
-4. Push to a public GitHub repo, enable Pages (Settings → Pages → source: `main`, folder: `/src`).
+4. Enable Pages (Settings → Pages → source: `main`, folder: `/` (root)).
 
 ## Cost calculation
 The pricing engine is a single pure function in `js/app.js` — `calculateEstimate(answers, settings)`. Pricing rules live in `settings.json` so you can tune them without touching JS.

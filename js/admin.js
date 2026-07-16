@@ -92,7 +92,7 @@ async function loadSettings() {
   if (!repo) return;
   const [owner, name] = repo.split("/");
   try {
-    const data = await getFile({ owner, repo, path: "src/settings/defaults.json" });
+    const data = await getFile({ owner, repo, path: "settings/defaults.json" });
     const json = deb64(data.content);
     const cfg = JSON.parse(json);
     localStorage.setItem(LS.settings, json);
@@ -129,7 +129,7 @@ async function saveSettings() {
   }
   const [owner, name] = repo.split("/");
   try {
-    const data = await getFile({ owner, repo, path: "src/settings/defaults.json" });
+    const data = await getFile({ owner, repo, path: "settings/defaults.json" });
     const cfg = JSON.parse(deb64(data.content));
 
     cfg.studio.name = el("s-studio-name").value.trim();
@@ -147,7 +147,7 @@ async function saveSettings() {
     await putFile({
       owner,
       repo,
-      path: "src/settings/defaults.json",
+      path: "settings/defaults.json",
       message: `chore: update settings via admin (${new Date().toISOString().slice(0, 10)})`,
       content: newContent,
       sha: data.sha,

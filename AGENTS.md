@@ -13,10 +13,10 @@ Static web app — a client intake survey for a WordPress + opencode studio.
 - FormSubmit.co as form receiver endpoint (free, unlimited, supports `_cc`).
 - Google Sheets as record store (FormSubmit native integration OR Apps Script).
 - GitHub Pages as static hosting (free forever).
-- GitHub API used by the admin dashboard to commit changes to `src/settings/settings.json`.
+- GitHub API used by the admin dashboard to commit changes to `settings/settings.json`.
 
 # Source of Truth
-- `src/settings/settings.json` is the single source of truth for:
+- `settings/settings.json` is the single source of truth for:
   - Studio / owner profile (name, email, reply time, brand color).
   - Pricing rules (base, per-page, per-feature, add-ons).
   - Hostinger tier matching rules.
@@ -30,11 +30,11 @@ Static web app — a client intake survey for a WordPress + opencode studio.
 - Never use paid SaaS APIs.
 
 # Deployment
-- Hosting: GitHub Pages (`Settings` → Pages → `main` → `/src` source).
-- Domain: optional, free Path for now (e.g. `username.github.io/wp_intaker/`).
+- Hosting: GitHub Pages (`Settings` → Pages → `main` → `/` (root) source).
+- Domain: optional, e.g. `amworx.github.io/wp_intaker/`.
 
 # Workflow
-1. Survey UI: `src/index.html` reads `settings.json` and renders the form.
+1. Survey UI: `index.html` reads `settings.json` and renders the form.
 2. Live cost calculator uses pricing rules from `settings.json`.
 3. Submit triggers POST to FormSubmit.co (configured recipient + `_cc` client email).
 4. FormSubmit sends two emails (you + client) and can write a row to Google Sheets.
