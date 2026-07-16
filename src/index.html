@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Project Intake — {{studio.name}}</title>
+<link rel="stylesheet" href="../css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="/">{{studio.name}}</a>
+      <span class="badge">WordPress + opencode studio</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="loading" class="loading">Loading survey…</div>
+
+    <div id="app" class="hidden">
+      <div class="intro">
+        <h1>Tell us about your project</h1>
+        <p>This survey takes about 5–8 minutes. Your estimate updates live as you answer. There’s no commitment — we’ll reply within 48 hours with a tailored proposal.</p>
+      </div>
+
+      <form id="intake" novalidate>
+        <div id="sections"></div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Submit my answers →</button>
+          <p class="privacy">By submitting, you agree to our normal "no spam, ever" policy. We only use your answers to prepare your estimate.</p>
+        </div>
+      </form>
+
+      <aside id="estimate" class="estimate" aria-live="polite">
+        <h2>Live estimate</h2>
+        <div id="estimate-body">Answer a few questions to see your estimate.</div>
+      </aside>
+    </div>
+
+    <div id="error" class="hidden error-state">
+      <h2>Something went wrong</h2>
+      <p>We couldn’t load the survey. Please <a href="mailto:{{studio.email}}">email us</a> directly.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>© {{studio.name}}. Share this link freely.</small>
+    </div>
+  </footer>
+
+<script src="../js/app.js"></script>
+</body>
+</html>

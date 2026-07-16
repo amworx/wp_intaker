@@ -1,0 +1,16 @@
+# OS / editor
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs / runtime
+*.log
+.env
+
+# Node (we don't ship node_modules, but guard anyway)
+node_modules/
+
+# Build output (none here, but conserve)
+dist/
+build/
