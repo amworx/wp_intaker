@@ -42,10 +42,11 @@ wp_intaker/
 1. **FormSubmit** — Confirm your email at `https://formsubmit.co/amworxx@gmail.com` (one-time activation).
 2. **EmailJS** — Sign up at [emailjs.com](https://www.emailjs.com/) (free), create:
    - An Email Service → copy **Service ID**
-   - An OTP template (variables: `to_email`, `otp_code`, `from_name`) → copy **Template ID**
-   - A client confirmation template (variables: `to_email`, `client_name`, `business_name`, `message`, `from_name`) → copy **Template ID**
+   - **One Email Template** (variables: `to_email`, `otp_code`, `client_name`, `business_name`, `message`, `from_name`) → copy **Template ID**
    - Get your **Public Key** from Account → API Keys
-3. **Configure `index.html`** — Update the 4 EmailJS values at the top of the JS section.
+3. **Configure `index.html`** — Update the 3 EmailJS values at the top of the JS section.
+4. **Enable Pages** (Settings → Pages → source: `main`, folder: `/` (root)).
+5. Share the Pages URL with clients.
 4. **Enable Pages** (Settings → Pages → source: `main`, folder: `/` (root)).
 5. Share the Pages URL with clients.
 

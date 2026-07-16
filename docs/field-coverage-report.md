@@ -187,23 +187,18 @@ The OTP system requires **EmailJS** (free, 200 emails/month). FormSubmit cannot 
 2. **Create an Email Service** → Go to *Email Services* → *Add New Service*
    - Connect Gmail, Outlook, or any SMTP
    - Copy the **Service ID** (e.g. `service_abc123`)
-3. **Create OTP Template** → Go to *Email Templates* → *Create New Template*
-   - Template variables: `{{to_email}}`, `{{otp_code}}`, `{{from_name}}`
-   - Design a simple email with your code display
+3. **Create ONE Email Template** → Go to *Email Templates* → *Create New Template*
+   - Template variables: `{{to_email}}`, `{{otp_code}}`, `{{client_name}}`, `{{business_name}}`, `{{message}}`, `{{from_name}}`
+   - Design the email however you like. The same template handles both OTP and confirmations — use `{{otp_code}}` when sending the code, and `{{message}}` for the confirmation text.
    - Copy the **Template ID** (e.g. `template_xyz789`)
-4. **Create Client Confirmation Template** → *Create New Template*
-   - Template variables: `{{to_email}}`, `{{client_name}}`, `{{business_name}}`, `{{message}}`, `{{from_name}}`
-   - Design a thank-you/confirmation email
-   - Copy the **Template ID**
-5. **Get Public Key** → Go to *Account* → *API Keys*
+4. **Get Public Key** → Go to *Account* → *API Keys*
    - Copy the **Public Key** (e.g. `public_key_abc123`)
-6. **Configure in `index.html`** — Update these values at the top of the JS section:
+5. **Configure in `index.html`** — Update these 3 values at the top of the JS section:
 
 ```javascript
 const EMAILJS_PUBLIC_KEY = 'your_public_key_here';
 const EMAILJS_SERVICE_ID = 'your_service_id_here';
-const EMAILJS_TEMPLATE_OTP_ID = 'your_otp_template_id_here';
-const EMAILJS_TEMPLATE_CLIENT_ID = 'your_client_template_id_here';
+const EMAILJS_TEMPLATE_ID = 'your_template_id_here';
 ```
 
 ### Delivery Architecture

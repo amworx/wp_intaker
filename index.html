@@ -1422,16 +1422,15 @@
         const FORM_SUBMIT_URL = 'https://formsubmit.co/amworxx@gmail.com';
 
         // =====================================================================
-        //  EMAILJS CONFIG (for OTP code delivery)
+        //  EMAILJS CONFIG (for OTP + client confirmation)
         //  Sign up free at https://www.emailjs.com/
         //  1. Create an Email Service  →  copy Service ID
-        //  2. Create an Email Template  →  use variables: {{to_email}}, {{otp_code}}, {{from_name}}
+        //  2. Create one Email Template  →  variables: {{to_email}}, {{otp_code}}, {{client_name}}, {{business_name}}, {{message}}, {{from_name}}
         //  3. Go to Account → API Keys  →  copy Public Key
         // =====================================================================
-        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';    // https://dashboard.emailjs.com/admin/account
-        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';    // https://dashboard.emailjs.com/admin/services
-        const EMAILJS_TEMPLATE_OTP_ID = 'YOUR_TEMPLATE_ID';  // template with: to_email, otp_code, from_name
-        const EMAILJS_TEMPLATE_CLIENT_ID = 'YOUR_TEMPLATE_ID';  // template with: to_email, client_name, business_name, message, from_name
+        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
         emailjs.init(EMAILJS_PUBLIC_KEY);
 
         // =====================================================================
@@ -1731,7 +1730,7 @@
 
                 const result = await emailjs.send(
                     EMAILJS_SERVICE_ID,
-                    EMAILJS_TEMPLATE_OTP_ID,
+                    EMAILJS_TEMPLATE_ID,
                     templateParams
                 );
 
@@ -2007,7 +2006,7 @@
 
                     const clientResult = await emailjs.send(
                         EMAILJS_SERVICE_ID,
-                        EMAILJS_TEMPLATE_CLIENT_ID,
+                        EMAILJS_TEMPLATE_ID,
                         {
                             to_email: email,
                             client_name: name,
