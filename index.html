@@ -731,6 +731,111 @@
             cursor: not-allowed;
         }
 
+        /* ===== PROGRESS TRACKER ===== */
+        .progress-tracker {
+            background: #fff;
+            border-bottom: 1px solid #e8ecf1;
+            padding: 16px 24px 12px;
+            position: sticky;
+            top: 56px;
+            z-index: 99;
+            transition: box-shadow 0.3s;
+        }
+        .progress-tracker.scrolled {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        @media (max-width: 600px) {
+            .progress-tracker { top: 48px; padding: 10px 12px 8px; }
+        }
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 2px;
+            border: none;
+            background: none;
+            font-family: inherit;
+            transition: opacity 0.2s;
+            position: relative;
+            flex: 1;
+        }
+        .progress-step:hover { opacity: 0.8; }
+        .step-number {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: #e8ecf1;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .progress-step.active .step-number {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+        }
+        .progress-step.completed .step-number {
+            background: #059669;
+            color: #fff;
+        }
+        .progress-step.completed .step-num { display: none; }
+        .progress-step.completed .step-number::after {
+            content: '✓';
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .step-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.2;
+            transition: color 0.3s;
+        }
+        .progress-step.active .step-label { color: #2563eb; }
+        .progress-step.completed .step-label { color: #059669; }
+
+        .progress-bar-track {
+            height: 3px;
+            background: #e8ecf1;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2563eb, #4f46e5);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        /* Dark mode progress */
+        .dark .progress-tracker { background: #1f2937; border-color: #374151; }
+        .dark .step-number { background: #374151; color: #9ca3af; }
+        .dark .progress-step.active .step-number { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+        .dark .progress-step.completed .step-number { background: #059669; }
+        .dark .step-label { color: #6b7280; }
+        .dark .progress-step.active .step-label { color: #60a5fa; }
+        .dark .progress-step.completed .step-label { color: #34d399; }
+        .dark .progress-bar-track { background: #374151; }
+        .dark .progress-bar-fill { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+
         /* ===================================================================
            COMPONENT CLASSES (shared with admin dashboard)
            =================================================================== */
@@ -893,6 +998,43 @@
             <div style="display:flex;align-items:center;gap:8px;">
                 <button class="price-breakdown-btn" id="showBreakdownBtn" type="button">See breakdown</button>
                 <button id="surveyDarkToggle" onclick="toggleSurveyDark()" aria-label="Toggle dark mode" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:#64748b;padding:4px 6px;border-radius:6px;" title="Toggle dark mode">🌙</button>
+            </div>
+        </div>
+
+        <!-- ===== PROGRESS BAR ===== -->
+        <div class="progress-tracker" id="progressTracker">
+            <div class="progress-steps" id="progressSteps">
+                <div class="progress-step" data-section="0" onclick="scrollToSection(0)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">1</span></span>
+                    <span class="step-label">Hosting</span>
+                </div>
+                <div class="progress-step" data-section="1" onclick="scrollToSection(1)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">2</span></span>
+                    <span class="step-label">Business</span>
+                </div>
+                <div class="progress-step" data-section="2" onclick="scrollToSection(2)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">3</span></span>
+                    <span class="step-label">Website</span>
+                </div>
+                <div class="progress-step" data-section="3" onclick="scrollToSection(3)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">4</span></span>
+                    <span class="step-label">Features</span>
+                </div>
+                <div class="progress-step" data-section="4" onclick="scrollToSection(4)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">5</span></span>
+                    <span class="step-label">Design</span>
+                </div>
+                <div class="progress-step" data-section="5" onclick="scrollToSection(5)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">6</span></span>
+                    <span class="step-label">Timeline</span>
+                </div>
+                <div class="progress-step" data-section="6" onclick="scrollToSection(6)" role="button" tabindex="0">
+                    <span class="step-number"><span class="step-num">7</span></span>
+                    <span class="step-label">Budget</span>
+                </div>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressFill"></div>
             </div>
         </div>
 
@@ -2667,6 +2809,192 @@
                 btn.textContent = isDark ? '☀️' : '🌙';
             }
         })();
+
+        // =====================================================================
+        //  UX — PROGRESS TRACKING, AUTO-SAVE, SECTION NAV
+        // =====================================================================
+
+        /** Get all .section elements (the 7 form sections) */
+        function getFormSections() {
+            return document.querySelectorAll('.form-body > .section, #surveyForm > .section');
+        }
+
+        /** Scroll to a section by its index (0-based) */
+        function scrollToSection(idx) {
+            const sections = getFormSections();
+            if (idx < 0 || idx >= sections.length) return;
+            sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Update progress immediately
+            updateProgress(idx);
+        }
+
+        /** Update progress bar state for a given active section index */
+        function updateProgress(activeIdx) {
+            const steps = document.querySelectorAll('.progress-step');
+            const sections = getFormSections();
+            const total = steps.length;
+            if (!total) return;
+
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i < activeIdx) step.classList.add('completed');
+                if (i === activeIdx) step.classList.add('active');
+            });
+
+            // Update fill bar
+            const fill = document.getElementById('progressFill');
+            if (fill) {
+                const pct = total > 1 ? (activeIdx / (total - 1)) * 100 : 0;
+                fill.style.width = Math.min(pct, 100) + '%';
+            }
+        }
+
+        /** Detect which section is most visible and update progress */
+        function detectVisibleSection() {
+            const sections = getFormSections();
+            let bestIdx = 0, bestRatio = 0;
+            sections.forEach((sec, i) => {
+                const rect = sec.getBoundingClientRect();
+                const visible = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+                const ratio = visible / rect.height;
+                if (ratio > bestRatio) { bestRatio = ratio; bestIdx = i; }
+            });
+            updateProgress(bestIdx);
+        }
+
+        // Observe sections for progress tracking
+        let progressObserver = null;
+        function initProgressTracking() {
+            const sections = getFormSections();
+            if (!sections.length) return;
+            // Use IntersectionObserver for efficient tracking
+            progressObserver = new IntersectionObserver((entries) => {
+                // Find the section with the highest intersection ratio
+                let best = null, bestRatio = 0;
+                entries.forEach(e => {
+                    if (e.intersectionRatio > bestRatio) {
+                        bestRatio = e.intersectionRatio;
+                        best = e.target;
+                    }
+                });
+                if (best) {
+                    const idx = Array.from(sections).indexOf(best);
+                    if (idx >= 0) updateProgress(idx);
+                }
+            }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+            sections.forEach(s => progressObserver.observe(s));
+            // Fallback on scroll
+            window.addEventListener('scroll', detectVisibleSection, { passive: true });
+        }
+
+        // =====================================================================
+        //  AUTO-SAVE DRAFT TO LOCALSTORAGE
+        // =====================================================================
+        const DRAFT_KEY = 'amworx_survey_draft';
+
+        /** Get all form values as a plain object */
+        function getFormData() {
+            const form = document.getElementById('surveyForm');
+            if (!form) return {};
+            const data = {};
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(el => {
+                if (!el.name) return;
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                    if (el.checked) data[el.name] = el.value;
+                } else {
+                    data[el.name] = el.value;
+                }
+            });
+            return data;
+        }
+
+        /** Restore form values from an object */
+        function setFormData(data) {
+            if (!data || !Object.keys(data).length) return;
+            const form = document.getElementById('surveyForm');
+            if (!form) return;
+            Object.entries(data).forEach(([name, value]) => {
+                if (!value) return;
+                const el = form.querySelector(`[name="${name}"]`);
+                if (!el) return;
+                if (el.type === 'radio' || el.type === 'checkbox') {
+                    el.checked = (el.value === value);
+                } else {
+                    el.value = value;
+                }
+            });
+        }
+
+        /** Debounced save draft */
+        let draftTimer = null;
+        function saveDraft() {
+            clearTimeout(draftTimer);
+            draftTimer = setTimeout(() => {
+                try {
+                    const data = getFormData();
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+                } catch(e) {}
+            }, 800);
+        }
+
+        /** Try restoring a saved draft */
+        function restoreDraft() {
+            try {
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                setFormData(data);
+                return true;
+            } catch(e) { return false; }
+        }
+
+        /** Clear the saved draft */
+        function clearDraft() {
+            try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+        }
+
+        // Wire up auto-save on input changes
+        document.addEventListener('input', function(e) {
+            if (e.target.closest && e.target.closest('#surveyForm')) {
+                saveDraft();
+            }
+        }, { passive: true });
+
+        // Sticky tracker shadow on scroll
+        const tracker = document.getElementById('progressTracker');
+        if (tracker) {
+            window.addEventListener('scroll', function() {
+                const rect = tracker.getBoundingClientRect();
+                tracker.classList.toggle('scrolled', rect.top <= 0);
+            }, { passive: true });
+        }
+
+        // Restore draft on load
+        if (restoreDraft()) {
+            console.log('[UX] Draft restored from localStorage');
+            // Recalculate prices after restoring data
+            setTimeout(calculate, 100);
+        }
+
+        // Clear draft on successful form submit
+        const origSubmit = document.getElementById('surveyForm')?.onsubmit;
+        document.getElementById('surveyForm')?.addEventListener('submit', function() {
+            clearDraft();
+        });
+
+        // Init progress tracking after DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initProgressTracking);
+        } else {
+            initProgressTracking();
+        }
+        // Also run on load to ensure sections are rendered
+        window.addEventListener('load', function() {
+            detectVisibleSection();
+            // Set initial progress to section 1
+            updateProgress(0);
+        });
 
         // =====================================================================
         //  INITIAL CALCULATION
