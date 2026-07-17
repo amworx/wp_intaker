@@ -267,6 +267,316 @@
         /* ── Better table rows ── */
         .table-striped tbody tr:nth-child(even) { background: rgba(0,0,0,0.015); }
         .dark .table-striped tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+
+        /* ===================================================================
+           LOGIN GATE — Uiverse monkey card (ilkhoeri/rare-treefrog-60)
+           =================================================================== */
+        .login-gate .card {
+            --p: 32px;
+            --h-form: auto;
+            --w-form: 380px;
+            --input-px: 0.75rem;
+            --input-py: 0.65rem;
+            --submit-h: 38px;
+            --blind-w: 64px;
+            --space-y: 0.5rem;
+            width: var(--w-form);
+            height: var(--h-form);
+            max-width: 100%;
+            border-radius: 16px;
+            background: white;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: var(--p);
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            -webkit-font-smoothing: antialiased;
+            -webkit-user-select: none;
+            user-select: none;
+            font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+                "Lucida Sans", Arial, sans-serif;
+        }
+        .login-gate .dark .card { background: #1f2937; }
+
+        .login-gate .avatar {
+            --sz-avatar: 166px;
+            order: 0;
+            width: var(--sz-avatar);
+            min-width: var(--sz-avatar);
+            max-width: var(--sz-avatar);
+            height: var(--sz-avatar);
+            min-height: var(--sz-avatar);
+            max-height: var(--sz-avatar);
+            border: 1px solid #707070;
+            border-radius: 9999px;
+            overflow: hidden;
+            cursor: pointer;
+            z-index: 2;
+            perspective: 80px;
+            position: relative;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --sz-svg: calc(var(--sz-avatar) - 10px);
+        }
+        .login-gate .avatar svg {
+            position: absolute;
+            transition: transform 0.2s ease-in, opacity 0.1s;
+            transform-origin: 50% 100%;
+            height: var(--sz-svg);
+            width: var(--sz-svg);
+            pointer-events: none;
+        }
+        .login-gate .avatar svg#monkey { z-index: 1; }
+        .login-gate .avatar svg#monkey-hands {
+            z-index: 2;
+            transform-style: preserve-3d;
+            transform: translateY(calc(var(--sz-avatar) / 1.25)) rotateX(-21deg);
+        }
+        .login-gate .avatar::before {
+            content: "";
+            border-radius: 45%;
+            width: calc(var(--sz-svg) / 3.889);
+            height: calc(var(--sz-svg) / 5.833);
+            border: 0;
+            border-bottom: calc(var(--sz-svg) * (4 / 100)) solid #3c302a;
+            bottom: 20%;
+            position: absolute;
+            transition: all 0.2s ease;
+            z-index: 3;
+        }
+        .login-gate .blind-check:checked ~ .avatar::before {
+            width: calc(var(--sz-svg) * (9 / 100));
+            height: 0;
+            border-radius: 50%;
+            border-bottom: calc(var(--sz-svg) * (10 / 100)) solid #3c302a;
+        }
+        .login-gate .avatar svg#monkey .monkey-eye-r,
+        .login-gate .avatar svg#monkey .monkey-eye-l {
+            animation: monkey-blink 10s 1s infinite;
+            transition: all 0.2s ease;
+        }
+        @keyframes monkey-blink {
+            0%, 2%, 4%, 26%, 28%, 71%, 73%, 100% { ry: 4.5; cy: 31.7; }
+            1%, 3%, 27%, 72% { ry: 0.5; cy: 30; }
+        }
+        .login-gate .blind-check:checked ~ .avatar svg#monkey .monkey-eye-r,
+        .login-gate .blind-check:checked ~ .avatar svg#monkey .monkey-eye-l {
+            ry: 0.5;
+            cy: 30;
+        }
+        .login-gate .blind-check:checked ~ .avatar svg#monkey-hands {
+            transform: translate3d(0, 0, 0) rotateX(0deg);
+        }
+        .login-gate .form:focus-within ~ .avatar svg#monkey {
+            animation: monkey-slick 3s ease infinite 1s;
+            --center: rotateY(0deg);
+            --left: rotateY(-4deg);
+            --right: rotateY(4deg);
+        }
+        .login-gate .form:focus-within ~ .avatar::before,
+        .login-gate .form:focus-within ~ .avatar svg#monkey .monkey-eye-nose,
+        .login-gate .blind-check:not(:checked) ~ .form:focus-within ~ .avatar svg#monkey .monkey-eye-r,
+        .login-gate .blind-check:not(:checked) ~ .form:focus-within ~ .avatar svg#monkey .monkey-eye-l {
+            ry: 3;
+            cy: 35;
+            animation: monkey-slick 3s ease infinite 1s;
+            --center: translateX(0);
+            --left: translateX(-0.5px);
+            --right: translateX(0.5px);
+        }
+        @keyframes monkey-slick {
+            0%, 100% { transform: var(--center); }
+            25% { transform: var(--left); }
+            75% { transform: var(--right); }
+        }
+
+        .login-gate label.blind_input {
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: pointer;
+            z-index: 4;
+            position: absolute;
+            border: none;
+            right: calc(var(--p) + (var(--input-px) / 2));
+            bottom: calc(var(--p) + var(--submit-h) + var(--space-y) + (var(--input-py) / 1) + 3px);
+            padding: 4px 0;
+            width: var(--blind-w);
+            border-radius: 4px;
+            background-color: #fff;
+            color: #4d4d4d;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-gate label.blind_input:before {
+            content: "";
+            position: absolute;
+            left: calc((var(--input-px) / 2) * -1);
+            top: 0;
+            height: 100%;
+            width: 1px;
+            background: #8f8f8f;
+        }
+        .login-gate label.blind_input:hover {
+            color: #262626;
+            background-color: #f2f2f2;
+        }
+        .login-gate .blind-check ~ label.blind_input span.show,
+        .login-gate .blind-check:checked ~ label.blind_input span.hide { display: none; }
+        .login-gate .blind-check ~ label.blind_input span.hide,
+        .login-gate .blind-check:checked ~ label.blind_input span.show { display: block; }
+
+        .login-gate .form {
+            order: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-direction: column;
+            width: 100%;
+        }
+        .login-gate .form .title {
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-top: 0;
+            padding-bottom: 1rem;
+            color: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+        }
+        .login-gate .dark .form .title {
+            color: rgba(255, 255, 255, 0.7);
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+        .login-gate .form .label_input {
+            white-space: nowrap;
+            font-size: 1rem;
+            margin-top: calc(var(--space-y) / 2);
+            color: rgba(0, 0, 0, 0.9);
+            font-weight: 600;
+            display: inline;
+            text-align: left;
+            margin-right: auto;
+            position: relative;
+            z-index: 99;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .login-gate .dark .form .label_input { color: rgba(255, 255, 255, 0.8); }
+        .login-gate .form .input {
+            resize: vertical;
+            background: white;
+            border: 1px solid #8f8f8f;
+            border-radius: 6px;
+            outline: none;
+            padding: var(--input-py) var(--input-px);
+            font-size: 18px;
+            width: 100%;
+            color: #000000b3;
+            margin: var(--space-y) 0;
+            transition: all 0.25s ease;
+        }
+        .login-gate .dark .form .input {
+            background: #374151;
+            border-color: #6b7280;
+            color: #f3f4f6;
+        }
+        .login-gate .form .input:focus {
+            border: 1px solid #0969da;
+            outline: 0;
+            box-shadow: 0 0 0 2px #0969da;
+        }
+        .login-gate .dark .form .input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+        }
+        .login-gate .form .frg_pss {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+        }
+        .login-gate .form .frg_pss a {
+            background-color: transparent;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.25s ease;
+            color: #000000b3;
+            font-weight: 500;
+            float: right;
+        }
+        .login-gate .form .frg_pss a:hover { color: #000; }
+        .login-gate .dark .form .frg_pss a { color: rgba(255, 255, 255, 0.5); }
+        .login-gate .dark .form .frg_pss a:hover { color: #fff; }
+
+        .login-gate .form .submit {
+            height: var(--submit-h);
+            width: 100%;
+            outline: none;
+            cursor: pointer;
+            background-color: #fff;
+            background-image: linear-gradient(-180deg, rgba(255,255,255,0.09) 0%, rgba(17,17,17,0.04) 100%);
+            border: 1px solid rgba(22, 22, 22, 0.2);
+            font-weight: 500;
+            letter-spacing: 0.25px;
+            color: #000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1rem;
+            text-align: center;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            -webkit-appearance: button;
+            appearance: button;
+            margin: var(--space-y) 0 0;
+            font-family: inherit;
+        }
+        .login-gate .form .submit:hover {
+            background-image: linear-gradient(-180deg, rgba(255,255,255,0.18) 0%, rgba(17,17,17,0.08) 100%);
+            border: 1px solid rgba(22, 22, 22, 0.2);
+            color: #111;
+        }
+        .login-gate .form .submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .login-gate .dark .form .submit {
+            background-color: #374151;
+            color: #e5e7eb;
+            border-color: #4b5563;
+        }
+        .login-gate .dark .form .submit:hover:not(:disabled) {
+            background-color: #4b5563;
+            color: #f3f4f6;
+        }
+
+        /* Login gate error message */
+        .login-gate .login-error {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            margin: 0.25rem 0;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            color: #dc2626;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .login-gate .dark .login-error {
+            background: rgba(220,38,38,0.1);
+            border-color: rgba(220,38,38,0.3);
+            color: #fca5a5;
+        }
     </style>
 </head>
 <body>
@@ -277,9 +587,10 @@
      class="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
 
     <!-- ======================== LOGIN GATE ======================== -->
+    <!-- Uiverse monkey card design by ilkhoeri (rare-treefrog-60) -->
     <div x-show="!authenticated"
          x-transition:enter="transition duration-300"
-         class="fixed inset-0 flex items-center justify-center p-4 z-50 overflow-hidden"
+         class="fixed inset-0 flex items-center justify-center p-4 z-50 overflow-hidden login-gate"
          style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);">
         <!-- Animated bg orbs -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -291,7 +602,7 @@
         </div>
 
         <div class="w-full max-w-sm mx-auto relative"
-             x-data="{ floating: false }"
+             x-data="{ floating: false, showPasscode: false }"
              x-init="setTimeout(() => floating = true, 100)">
             <div class="relative"
                  :class="floating ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
@@ -299,51 +610,70 @@
                 <!-- Card glow -->
                 <div class="absolute -inset-1 bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-3xl blur-xl" aria-hidden="true"></div>
 
-                <div class="relative bg-white/95 dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 p-8 backdrop-blur-xl">
-                    <!-- Logo area -->
-                    <div class="text-center mb-7">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20 ring-4 ring-blue-500/10" aria-hidden="true">
-                            <i class="fas fa-pen-ruler text-white text-2xl"></i>
-                        </div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100" x-text="'Welcome to ' + (settingsForm.APP_NAME || CONFIG.APP_NAME)"></h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Enter your passcode to manage submissions</p>
-                    </div>
+                <!-- ═══ UIVERSE MONKEY CARD ═══ -->
+                <div class="card relative dark:bg-gray-800">
 
-                    <!-- Form -->
-                    <div class="space-y-5">
-                        <div class="relative group">
-                            <div class="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none z-10">
-                                <i class="fas fa-lock text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200 text-sm" aria-hidden="true"></i>
-                            </div>
-                            <input type="password" x-model="passcode" @keydown.enter="login()"
-                                   placeholder="Enter passcode"
-                                   class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 placeholder-gray-400 tracking-widest text-center transition-all duration-200 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-blue-500/10"
-                                   maxlength="20" autocomplete="current-password" spellcheck="false" />
-                        </div>
+                    <!-- Hidden blind checkbox for monkey animation -->
+                    <input class="blind-check" type="checkbox" id="blind-input" name="blindcheck" hidden x-model="showPasscode" />
+
+                    <!-- Show/Hide label -->
+                    <label for="blind-input" class="blind_input">
+                        <span class="hide">Hide</span>
+                        <span class="show">Show</span>
+                    </label>
+
+                    <!-- Monkey avatar with animated hands and eyes -->
+                    <label for="blind-input" class="avatar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 64 64" id="monkey">
+                            <ellipse cx="53.7" cy="33" rx="8.3" ry="8.2" fill="#89664c"></ellipse>
+                            <ellipse cx="53.7" cy="33" rx="5.4" ry="5.4" fill="#ffc5d3"></ellipse>
+                            <ellipse cx="10.2" cy="33" rx="8.2" ry="8.2" fill="#89664c"></ellipse>
+                            <ellipse cx="10.2" cy="33" rx="5.4" ry="5.4" fill="#ffc5d3"></ellipse>
+                            <g fill="#89664c">
+                                <path d="m43.4 10.8c1.1-.6 1.9-.9 1.9-.9-3.2-1.1-6-1.8-8.5-2.1 1.3-1 2.1-1.3 2.1-1.3-20.4-2.9-30.1 9-30.1 19.5h46.4c-.7-7.4-4.8-12.4-11.8-15.2"></path>
+                                <path d="m55.3 27.6c0-9.7-10.4-17.6-23.3-17.6s-23.3 7.9-23.3 17.6c0 2.3.6 4.4 1.6 6.4-1 2-1.6 4.2-1.6 6.4 0 9.7 10.4 17.6 23.3 17.6s23.3-7.9 23.3-17.6c0-2.3-.6-4.4-1.6-6.4 1-2 1.6-4.2 1.6-6.4"></path>
+                            </g>
+                            <path d="m52 28.2c0-16.9-20-6.1-20-6.1s-20-10.8-20 6.1c0 4.7 2.9 9 7.5 11.7-1.3 1.7-2.1 3.6-2.1 5.7 0 6.1 6.6 11 14.7 11s14.7-4.9 14.7-11c0-2.1-.8-4-2.1-5.7 4.4-2.7 7.3-7 7.3-11.7" fill="#e0ac7e"></path>
+                            <g fill="#3b302a" class="monkey-eye-nose">
+                                <path d="m35.1 38.7c0 1.1-.4 2.1-1 2.1-.6 0-1-.9-1-2.1 0-1.1.4-2.1 1-2.1.6.1 1 1 1 2.1"></path>
+                                <path d="m30.9 38.7c0 1.1-.4 2.1-1 2.1-.6 0-1-.9-1-2.1 0-1.1.4-2.1 1-2.1.5.1 1 1 1 2.1"></path>
+                                <ellipse cx="40.7" cy="31.7" rx="3.5" ry="4.5" class="monkey-eye-r"></ellipse>
+                                <ellipse cx="23.3" cy="31.7" rx="3.5" ry="4.5" class="monkey-eye-l"></ellipse>
+                            </g>
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 64 64" id="monkey-hands">
+                            <path fill="#89664C" d="M9.4,32.5L2.1,61.9H14c-1.6-7.7,4-21,4-21L9.4,32.5z"></path>
+                            <path fill="#FFD6BB" d="M15.8,24.8c0,0,4.9-4.5,9.5-3.9c2.3,0.3-7.1,7.6-7.1,7.6s9.7-8.2,11.7-5.6c1.8,2.3-8.9,9.8-8.9,9.8s10-8.1,9.6-4.6c-0.3,3.8-7.9,12.8-12.5,13.8C11.5,43.2,6.3,39,9.8,24.4C11.6,17,13.3,25.2,15.8,24.8"></path>
+                            <path fill="#89664C" d="M54.8,32.5l7.3,29.4H50.2c1.6-7.7-4-21-4-21L54.8,32.5z"></path>
+                            <path fill="#FFD6BB" d="M48.4,24.8c0,0-4.9-4.5-9.5-3.9c-2.3,0.3,7.1,7.6,7.1,7.6s-9.7-8.2-11.7-5.6c-1.8,2.3,8.9,9.8,8.9,9.8s-10-8.1-9.7-4.6c0.4,3.8,8,12.8,12.6,13.8c6.6,1.3,11.8-2.9,8.3-17.5C52.6,17,50.9,25.2,48.4,24.8"></path>
+                        </svg>
+                    </label>
+
+                    <!-- Login form -->
+                    <form class="form" @submit.prevent="login()">
+                        <div class="title">Studio Access</div>
+
+                        <label class="label_input" for="passcode-input">Passcode</label>
+                        <input x-model="passcode"
+                               :type="showPasscode ? 'password' : 'text'"
+                               class="input"
+                               id="passcode-input"
+                               @keydown.enter="login()"
+                               placeholder="Enter passcode"
+                               maxlength="20"
+                               autocomplete="current-password"
+                               spellcheck="false" />
 
                         <!-- Error -->
                         <div x-show="loginError"
                              x-transition:enter="transition duration-200"
-                             x-transition:enter-start="opacity-0 -translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             class="flex items-center gap-2.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-4 py-3" role="alert">
-                            <i class="fas fa-circle-exclamation text-red-500 text-sm flex-shrink-0" aria-hidden="true"></i>
-                            <span x-text="loginError" class="text-sm font-medium text-red-700 dark:text-red-400"></span>
-                        </div>
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             class="login-error"
+                             x-text="loginError" role="alert"></div>
 
-                        <button @click="login()"
-                                class="btn-primary w-full py-3.5 text-base shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-200 active:scale-[0.98]"
-                                :disabled="!passcode">
-                            <i class="fas fa-lock-open" aria-hidden="true"></i>
-                            <span>Unlock Dashboard</span>
-                        </button>
-
-                        <!-- Footer help -->
-                        <p class="text-center text-xs text-gray-400 dark:text-gray-500">
-                            <i class="fas fa-shield-halved mr-1 text-[10px]" aria-hidden="true"></i>
-                            Secured access &bull; Studio use only
-                        </p>
-                    </div>
+                        <button class="submit" type="submit" :disabled="!passcode">Unlock Dashboard</button>
+                    </form>
                 </div>
             </div>
         </div>
