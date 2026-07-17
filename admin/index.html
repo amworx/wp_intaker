@@ -196,6 +196,8 @@
             border-radius: 0 3px 3px 0;
         }
         .dark .sidebar-active-indicator { background: #60a5fa; }
+        .sidebar-bg { background: #fff; }
+        .dark .sidebar-bg { background: #030712; }
 
         /* ── Component: Badges ── */
         .badge-reviewed {
@@ -305,7 +307,7 @@
 
             <!-- ====== SIDEBAR ====== -->
             <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                   class="fixed inset-y-0 left-0 z-40 w-64 transition-all duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto flex flex-col shadow-2xl lg:shadow-none bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+                   class="fixed inset-y-0 left-0 z-40 w-64 transition-all duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto flex flex-col shadow-2xl lg:shadow-none sidebar-bg border-r border-gray-200 dark:border-gray-800">
                 <!-- Logo -->
                 <div class="flex items-center gap-3 px-5 h-16 border-b border-gray-200 dark:border-gray-800">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
