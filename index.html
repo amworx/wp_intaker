@@ -1442,30 +1442,33 @@
         // Update them directly in the HTML above if you need different prices.
         // =====================================================================
 
-        // FormSubmit's AJAX endpoint (fetch/JSON) never delivers attachments —
-        // that's a documented FormSubmit limitation, not something retrying fixes.
-        // Only the REAL (non-ajax) endpoint, submitted as a genuine multipart/form-data
-        // browser form post, forwards file attachments (free, up to 10MB total).
-        const FORM_SUBMIT_ATTACHMENT_URL = 'https://formsubmit.co/amworxx@gmail.com';
+        // =====================================================================
+        //  EMAIL DELIVERY BACKEND
+        //  Primary: Google Apps Script → Gmail → amworxx@gmail.com
+        //  (HTML email body with PDF + file attachments. 100% free.)
+        //  Deploy per docs/google-apps-script.md, paste the Web App URL below.
+        // =====================================================================
+        const APPS_SCRIPT_URL = '';
+        const STUDIO_EMAIL = 'amworxx@gmail.com';
+
+        // FormSubmit AJAX endpoint (fallback only — does NOT deliver attachments,
+        // but reliably delivers text when no other path works).
+        const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
 
         // =====================================================================
         //  EMAILJS CONFIG
-        //  Sign up free at https://www.emailjs.com/ (200 emails/month free —
-        //  plenty, since this only sends HTML text, never attachments)
+        //  Sign up free at https://www.emailjs.com/
+        //  Used only for OTP code delivery.  200 emails/month free.
         //  1. Create an Email Service  →  copy Service ID
-        //  2. Template 'otp_template' with variables: {{email}}, {{passcode}}, {{company_name}}, etc.
-        //  3. NEW: Template 'submission_template' — create this in the dashboard with
-        //     variables: {{to_email}}, {{client_name}}, {{client_email}}, {{subject}},
-        //     and {{{email_body}}} (TRIPLE braces — renders raw HTML instead of
-        //     escaping it). Set the template's "To Email" field to {{to_email}}.
-        //     The body of the template can be just: {{{email_body}}}
-        //  4. Go to Account → API Keys  →  copy Public Key
+        //  2. Template 'otp_template' with variables: {{email}}, {{passcode}},
+        //     {{company_name}}, {{time}}, {{year}}, {{device}}, {{browser}},
+        //     {{location}}, {{request_time}}, {{logo_url}}, {{support_url}},
+        //     {{to_email}}
+        //  3. Go to Account → API Keys  →  copy Public Key
         // =====================================================================
         const EMAILJS_PUBLIC_KEY = 'UVIFF194EIvto7_0v';
         const EMAILJS_SERVICE_ID = 'otp_wp_intake';
         const EMAILJS_TEMPLATE_ID = 'otp_template';
-        const EMAILJS_SUBMISSION_TEMPLATE_ID = 'submission_template';
-        const STUDIO_EMAIL = 'amworxx@gmail.com';
         emailjs.init(EMAILJS_PUBLIC_KEY);
 
         // =====================================================================
@@ -2156,83 +2159,81 @@
         }
 
         // =====================================================================
-        //  ATTACHMENT DELIVERY — real (non-ajax) FormSubmit endpoint
-        //  Submitted via a genuine hidden <form> targeting a hidden <iframe>,
-        //  NOT fetch — fetch/AJAX to FormSubmit never carries file attachments.
-        //  A real browser multipart/form-data submission is required for
-        //  FormSubmit to forward files by email. 100% free, no paid tier.
+        //  EMAIL DELIVERY — Google Apps Script → Gmail (primary)
+        //  Post a single JSON payload containing the HTML body + base64-encoded
+        //  files. Apps Script uses MailApp.sendEmail() with attachments.
+        //  100% free, native Gmail receiving, single email to studio.
         // =====================================================================
-        function submitAttachmentsToFormSubmit(name, businessName, email, summaryText, allFiles) {
-            return new Promise((resolve) => {
-                let iframe = document.getElementById('formsubmitAttachFrame');
-                if (!iframe) {
-                    iframe = document.createElement('iframe');
-                    iframe.name = 'formsubmitAttachFrame';
-                    iframe.id = 'formsubmitAttachFrame';
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-                }
-
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.enctype = 'multipart/form-data';
-                form.action = FORM_SUBMIT_ATTACHMENT_URL;
-                form.target = 'formsubmitAttachFrame';
-                form.style.display = 'none';
-
-                function addField(fieldName, value) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = fieldName;
-                    input.value = value == null ? '' : value;
-                    form.appendChild(input);
-                }
-
-                addField('_subject', 'Website Request — Files & PDF — ' + name);
-                addField('_captcha', 'false');
-                addField('_template', 'box');
-                addField('client_name', name);
-                addField('business_name', businessName);
-                addField('client_email', email);
-                addField('_summary', summaryText);
-
-                // Real file input carrying all files (uploads + generated PDF).
-                // FormSubmit only forwards files from actual <input type="file">
-                // elements in a real form submission — not from an in-memory
-                // FormData sent via fetch.
-                if (allFiles && allFiles.length) {
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file';
-                    fileInput.name = 'file_upload[]';
-                    fileInput.multiple = true;
-                    fileInput.style.display = 'none';
-                    try {
-                        const dt = new DataTransfer();
-                        allFiles.forEach(f => dt.items.add(f));
-                        fileInput.files = dt.files;
-                    } catch (err) {
-                        console.warn('Could not attach files (DataTransfer unsupported):', err);
-                    }
-                    form.appendChild(fileInput);
-                }
-
-                document.body.appendChild(form);
-
-                let settled = false;
-                const finish = () => {
-                    if (settled) return;
-                    settled = true;
-                    iframe.removeEventListener('load', finish);
-                    form.remove();
-                    resolve(true);
+        function readFileAsBase64(fileOrBlob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result;
+                    // data:mime;base64,XXXXX  →  XXXXX
+                    const idx = result.indexOf(',');
+                    const content = idx >= 0 ? result.slice(idx + 1) : result;
+                    resolve({
+                        name: fileOrBlob.name || 'file',
+                        type: fileOrBlob.type || 'application/octet-stream',
+                        content: content
+                    });
                 };
-                iframe.addEventListener('load', finish);
-                // Cross-origin iframe response can't be read, so this is a
-                // best-effort completion signal, plus a hard timeout fallback.
-                setTimeout(finish, 8000);
-
-                form.submit();
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(fileOrBlob);
             });
+        }
+
+        async function deliverViaAppsScript(formData, totalVal, pdfFile, files) {
+            if (!APPS_SCRIPT_URL) return { success: false, error: 'not_configured' };
+
+            // Flatten FormData into a plain object (array-safe for multi-select fields)
+            const formObj = {};
+            formData.forEach((value, key) => {
+                const v = typeof value === 'string' ? value : value.name;
+                if (formObj[key] === undefined) formObj[key] = v;
+                else if (Array.isArray(formObj[key])) formObj[key].push(v);
+                else formObj[key] = [formObj[key], v];
+            });
+            formObj.calculated_total = totalVal || '0';
+
+            // Build attachments list: PDF first, then user files
+            const filesBase64 = [];
+            if (pdfFile) {
+                try {
+                    filesBase64.push(await readFileAsBase64(pdfFile));
+                } catch (err) {
+                    console.warn('Could not encode PDF for email:', err);
+                }
+            }
+            for (const f of files) {
+                try {
+                    filesBase64.push(await readFileAsBase64(f));
+                } catch (err) {
+                    console.warn('Could not encode file for email:', f.name, err);
+                }
+            }
+
+            const payload = {
+                form: formObj,
+                files: filesBase64,
+                request_time: new Date().toLocaleString()
+            };
+
+            try {
+                const resp = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const text = await resp.text();
+                let json;
+                try { json = JSON.parse(text); }
+                catch (parseErr) {
+                    return { success: false, error: 'Invalid response: ' + text.substring(0, 200) };
+                }
+                return json;
+            } catch (err) {
+                return { success: false, error: err.message };
+            }
         }
 
         // Reset verification if email changes (before verification)
@@ -2364,35 +2365,67 @@
                 el.className = 'email-status-item' + (state === 'ok' ? ' success' : (state === 'err' ? ' error' : ''));
             }
 
-            // ——— Channel 1: styled HTML summary via EmailJS (free — text only, no attachments needed) ———
-            (async () => {
+            // ——— Channel 1: Google Apps Script → Gmail (HTML body + PDF + files) ———
+            // PRIMARY.  100% free, native Gmail attachment delivery, single
+            // email to amworxx@gmail.com with everything attached.
+            try {
+                setChannelStatus('studioEmailStatus', 'pending', 'Sending…');
+                const result = await deliverViaAppsScript(formData, totalVal, pdfFile, selectedFiles);
+                if (result && result.success) {
+                    const count = result.attachments || 0;
+                    const attLabel = count > 0
+                        ? 'Delivered ✓ (' + count + ' attachment' + (count === 1 ? '' : 's') + ')'
+                        : 'Delivered ✓ (text only, no files)';
+                    setChannelStatus('studioEmailStatus', 'ok', attLabel);
+                } else if (result && result.error === 'not_configured') {
+                    // Apps Script URL not set → fall through to EmailJS
+                    throw new Error('Apps Script URL not configured');
+                } else {
+                    throw new Error(result && result.error ? result.error : 'Unknown Apps Script error');
+                }
+            } catch (err) {
+                console.warn('Apps Script delivery failed:', err);
+                setChannelStatus('studioEmailStatus', 'err', 'Apps Script not set up — falling back');
+
+                // ——— Channel 2 (fallback): EmailJS HTML body only (text-only, no attachments) ———
                 try {
                     const emailBodyHtml = buildEmailBodyHtml(formData, totalVal, fileList);
-                    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_SUBMISSION_TEMPLATE_ID, {
+                    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                         to_email: STUDIO_EMAIL,
                         subject: 'New Website Request — ' + name,
                         client_name: name,
                         client_email: email,
                         email_body: emailBodyHtml
                     });
-                    setChannelStatus('studioEmailStatus', 'ok', 'Summary delivered ✓');
-                } catch (err) {
-                    console.warn('EmailJS submission email failed:', err);
-                    setChannelStatus('studioEmailStatus', 'err', 'Summary email failed — check EmailJS "submission_template"');
-                }
-            })();
+                    setChannelStatus('studioEmailStatus', 'ok', 'Sent (EmailJS fallback, no attachments — set APPS_SCRIPT_URL for files)');
+                } catch (ejErr) {
+                    console.warn('EmailJS fallback failed:', ejErr);
+                    setChannelStatus('studioEmailStatus', 'err', 'EmailJS fallback failed');
 
-            // ——— Channel 2: files + PDF via the real (non-ajax) FormSubmit endpoint ———
-            (async () => {
-                try {
-                    const allFiles = pdfFile ? selectedFiles.concat([pdfFile]) : selectedFiles.slice();
-                    await submitAttachmentsToFormSubmit(name, formData.get('business_name'), email, summary, allFiles);
-                    setChannelStatus('attachmentEmailStatus', 'ok', 'Files & PDF sent ✓ (check inbox)');
-                } catch (err) {
-                    console.warn('Attachment delivery failed:', err);
-                    setChannelStatus('attachmentEmailStatus', 'err', 'File delivery failed: ' + err.message);
+                    // ——— Channel 3 (last resort): FormSubmit /ajax/ — text only ———
+                    try {
+                        const fsData = new FormData();
+                        fsData.set('_subject', 'New Website Request — ' + name);
+                        fsData.set('_captcha', 'false');
+                        fsData.set('_summary', summary);
+                        for (const [k, v] of formData.entries()) {
+                            if (typeof v === 'string') fsData.set(k, v);
+                        }
+                        const resp = await fetch(FORM_SUBMIT_URL, {
+                            method: 'POST',
+                            body: fsData
+                        });
+                        if (resp.ok) {
+                            setChannelStatus('studioEmailStatus', 'ok', 'Sent (FormSubmit text-only fallback)');
+                        } else {
+                            setChannelStatus('studioEmailStatus', 'err', 'All delivery channels failed');
+                        }
+                    } catch (fsErr) {
+                        console.warn('FormSubmit last-resort failed:', fsErr);
+                        setChannelStatus('studioEmailStatus', 'err', 'All delivery channels failed');
+                    }
                 }
-            })();
+            }
 
             btn.classList.remove('loading');
             btn.disabled = false;

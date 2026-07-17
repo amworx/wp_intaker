@@ -4,6 +4,14 @@ This file is for any new team member taking over this project. It explains what 
 
 ---
 
+## Current State (Summary)
+
+The intake form delivers submissions to the studio via **Google Apps Script → Gmail** — a single email arrives at `amworxx@gmail.com` with a styled HTML body plus PDF + all client uploads attached as native Gmail attachments. OTP verification still uses EmailJS.
+
+Setup is documented in `docs/google-apps-script.md`.
+
+---
+
 ## Project Overview
 
 A single-file HTML website intake form (`index.html`) hosted on **GitHub Pages** at:
@@ -82,44 +90,16 @@ All fields have **human-readable labels** in all outputs. Empty/unanswered field
 
 ---
 
-## What Could Not Be Done (And Why)
+## Email Architecture (Current)
 
-### ❌ PDF Attachment via Email
-**Problem**: Client-side PDF was generated with jsPDF containing all form data, but could not be delivered as an email attachment.
+| Purpose | Service | To |
+|---|---|---|
+| Full submission (primary) | **Google Apps Script → Gmail** | `amworxx@gmail.com` |
+| Full submission (fallback) | EmailJS (`otp_template`) | `amworxx@gmail.com` |
+| Full submission (last resort) | FormSubmit.co (`/ajax/`) | `amworxx@gmail.com` |
+| OTP code | EmailJS (`otp_template`) | Client's email |
 
-**Root cause**: EmailJS free tier does **not** support Variable Attachments. Only paid plans ($15+/month) include attachment support.
-
-**Attempted fixes**:
-1. FormSubmit `/ajax/` endpoint with files → returns `{"success":"true"}` but files silently dropped — never arrive in inbox
-2. FormSubmit regular endpoint with files → returns HTTP 500
-3. FormSubmit regular endpoint without `_captcha` → returns captcha HTML page
-4. Tried multiple endpoint combinations — nothing delivers files reliably
-
-**Current status**: The email body itself contains all the data in a professional HTML table. No attachment needed for information completeness — but uploaded files cannot be attached.
-
-### ❌ User-Uploaded File Delivery
-**Problem**: User-uploaded files (images, PDFs, docs) cannot be delivered to the studio inbox.
-
-**Root cause**: Same as above — no attachment support on free tier EmailJS, and FormSubmit drops files.
-
-**Current status**: File names are listed in the email so the studio knows what was uploaded. Actual file delivery requires either:
-- EmailJS paid plan (Variable Attachments)
-- A file hosting service (upload to cloud storage, include links in email)
-- Client sends files separately
-
-### ❌ Client Confirmation Email on Submission
-**Problem**: Originally sent a thank-you email to the client after submission using EmailJS.
-
-**Why removed**: EmailJS sends a confirmation email to activate the recipient template the first time. This confused the client — they received a "Verify Your Identity" email (OTP template format) after already submitting.
-
-**Current status**: No client confirmation email. Client sees the on-screen thank-you card with their response summary.
-
-### ❌ FormSubmit as Primary Delivery
-**Problem**: FormSubmit was the original primary delivery channel.
-
-**Why switched**: FormSubmit sends **activation emails** to any email address not in its verified recipients list. Since client emails are dynamic (not pre-verified), FormSubmit would send "Confirm your email" messages to clients. This is unacceptable UX.
-
-**Current status**: FormSubmit only receives submissions (to the studio). OTP and primary notification both go through EmailJS.
+**Primary delivery: Google Apps Script → Gmail.** Single email with HTML body + PDF + all uploaded files as native Gmail attachments. 100% free. Setup guide at **`docs/google-apps-script.md`**.
 
 ---
 

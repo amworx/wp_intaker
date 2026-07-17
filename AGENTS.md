@@ -36,21 +36,26 @@ Static web app — a self-contained single-file client website survey / intake f
 # Email Architecture
 | Email | Service | To | Content |
 |---|---|---|---|
-| Full submission (primary) | **EmailJS** (`submission_template`) | `amworxx@gmail.com` | Professional HTML email with ALL form data in a styled table (CodePen-style) |
-| Full submission (fallback) | FormSubmit.co (`/ajax/`) | `amworxx@gmail.com` | Text-only summary |
+| Full submission (primary) | **Google Apps Script → Gmail** | `amworxx@gmail.com` | HTML email + PDF + all uploaded files as native Gmail attachments |
+| Full submission (fallback 1) | EmailJS (`otp_template`) | `amworxx@gmail.com` | HTML body only, no attachments |
+| Full submission (fallback 2) | FormSubmit.co (`/ajax/`) | `amworxx@gmail.com` | Text-only summary |
 | OTP code | EmailJS (`otp_template`) | Client's email | 6-digit verification code |
-| Client confirmation | EmailJS (`otp_template`) | Client's email | Thank-you + overview |
 
-EmailJS is the primary delivery channel — it sends a beautifully formatted HTML email body containing all form fields with human-readable labels. No file attachments (EmailJS free tier limitation).
+Apps Script is the primary delivery channel — it sends a fully styled HTML email with PDF + every uploaded file attached natively to Gmail. Web Apps on Apps Script are 100% free, send via Gmail directly with attachments up to 25MB, and run under the existing `amworxx@gmail.com` account (no third parties). Fallbacks only fire if Apps Script URL is unconfigured or unreachable.
 
-FormSubmit `/ajax/` endpoint serves as a text-only fallback. User-uploaded file names are listed in the email body but files cannot be attached due to EmailJS free plan limits.
+# Google Apps Script Backend
+- Single endpoint (`APPS_SCRIPT_URL`) configured in `index.html` after deploying the Apps Script Web App.
+- Receives JSON `POST { form: {...}, files: [{name, type, content (base64)}], request_time }`.
+- Builds HTML email body with all form fields (human-readable labels) and calls `MailApp.sendEmail({htmlBody, attachments, to: STUDIO_EMAIL})`.
+- Setup guide and copy-pasteable code: **`docs/google-apps-script.md`**.
+- Quotas: 100 emails/day consumer Gmail; 25MB attachment cap; Apps Script request body 50MB.
 
-# EmailJS Templates
-## `submission_template`
-- Variables: `{{email_body}}`, `{{company_name}}`, `{{request_time}}`, `{{logo_url}}`, `{{support_url}}`, `{{email}}`, `{{to_email}}`
-- The `{{email_body}}` variable contains the full HTML table with all submission data
-- Template subject: `New Website Request — {{company_name}}`
-- Template body: use `{{{email_body}}}` (triple braces for raw HTML rendering) in the Content > Code section
+# PDF Generation
+- jsPDF is loaded client-side and generates a multi-page PDF with all form fields before submission. The PDF is sent as the first attachment via Apps Script.
+
+# FormSubmit Usage
+- FormSubmit `/ajax/` endpoint retained as last-resort text-only fallback (does NOT deliver attachments).
+- Do NOT send TO client emails via FormSubmit — it triggers activation emails.
 
 # Workflow
 1. Client opens `index.html` (served via GitHub Pages).
