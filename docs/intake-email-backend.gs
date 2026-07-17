@@ -176,7 +176,7 @@ function saveToSheet(form, files, requestTime) {
     return String(v);
   }
 
-  const fileNames = files.map(function(f) { return f.name; }).join('; ');
+  const fileNames = (files || []).map(function(f) { return f.name; }).join('; ');
 
   sheet.appendRow([
     requestTime,
