@@ -93,13 +93,115 @@
         .toast-bubble { animation: toastPop 0.35s cubic-bezier(0.16,1,0.3,1); }
         @keyframes toastPop { from { transform: translateY(24px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
+        /* ── Component: Inputs ── */
+        .input-field {
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: #fff;
+            color: #111827;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .input-field::placeholder { color: #9ca3af; }
+        .dark .input-field {
+            background: #1f2937;
+            border-color: #374151;
+            color: #f3f4f6;
+        }
+        .dark .input-field:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+        }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.25rem; padding-right: 2rem; }
+
+        /* ── Component: Buttons ── */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            font-size: 0.8125rem; font-weight: 600;
+            border: none; border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #4338ca); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: #fff;
+            color: #374151;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid #e5e7eb; border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+        .dark .btn-secondary { background: #1f2937; color: #e5e7eb; border-color: #374151; }
+        .dark .btn-secondary:hover { background: #374151; }
+
+        .btn-danger {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: #fff;
+            color: #dc2626;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid #fca5a5; border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+        .dark .btn-danger { background: #1f2937; border-color: #7f1d1d; color: #fca5a5; }
+        .dark .btn-danger:hover { background: #450a0a; border-color: #dc2626; }
+
+        /* ── Component: Sidebar links ── */
+        .sidebar-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.625rem;
+            font-size: 0.8125rem; font-weight: 500;
+            text-decoration: none;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .sidebar-link.active { color: #fff; background: rgba(255,255,255,0.08); }
+        .sidebar-link.text-gray-400 { color: #9ca3af; }
+        .sidebar-link:hover:not(.active) { color: #e5e7eb; background: rgba(255,255,255,0.04); }
+
+        /* ── Component: Badges ── */
+        .badge-reviewed {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.1875rem 0.5rem;
+            background: #d1fae5; color: #065f46;
+            font-size: 0.6875rem; font-weight: 600;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        .dark .badge-reviewed { background: rgba(5,150,105,0.15); color: #6ee7b7; }
+        .badge-new {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.1875rem 0.5rem;
+            background: #dbeafe; color: #1e40af;
+            font-size: 0.6875rem; font-weight: 600;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        .dark .badge-new { background: rgba(59,130,246,0.15); color: #93c5fd; }
+
         /* ── Row actions ── */
         .row-actions { opacity: 0; transition: opacity 0.15s; }
         tr:hover .row-actions { opacity: 1; }
         @media (hover: none) { .row-actions { opacity: 1; } }
-
-        /* ── Avatar ── */
-        .avatar { @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0; }
 
         /* ── Body scroll lock ── */
         body.panel-open { overflow: hidden; }
@@ -563,6 +665,156 @@
                                     </select>
                                 </div>
 
+                                <!-- ═══ PRICING ═══ -->
+                                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                        <span class="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Pricing</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Prices saved here override the intake form defaults. Leave blank to use the HTML <code>data-price</code> values.</p>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- Domain -->
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Domain</div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Register domain</span><input type="number" x-model.number="settingsForm.PRICES.domain_need" class="input-field w-20 text-center" min="0" placeholder="14" /></label>
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>No need</span><input type="number" x-model.number="settingsForm.PRICES.domain_no_need" class="input-field w-20 text-center" min="0" placeholder="0" /></label>
+                                            </div>
+                                        </div>
+                                        <!-- Hosting -->
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Web Hosting <span class="text-gray-400 font-normal">(yearly)</span></div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Need hosting</span><input type="number" x-model.number="settingsForm.PRICES.hosting_need" class="input-field w-20 text-center" min="0" placeholder="48" /></label>
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>No need</span><input type="number" x-model.number="settingsForm.PRICES.hosting_no_need" class="input-field w-20 text-center" min="0" placeholder="0" /></label>
+                                            </div>
+                                        </div>
+                                        <!-- Business Email -->
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Business Email <span class="text-gray-400 font-normal">(yearly)</span></div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Need email</span><input type="number" x-model.number="settingsForm.PRICES.email_need" class="input-field w-20 text-center" min="0" placeholder="15" /></label>
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>No need</span><input type="number" x-model.number="settingsForm.PRICES.email_no_need" class="input-field w-20 text-center" min="0" placeholder="0" /></label>
+                                            </div>
+                                        </div>
+                                        <!-- Setup Help -->
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Setup Help <span class="text-gray-400 font-normal">(one-time)</span></div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Need setup help</span><input type="number" x-model.number="settingsForm.PRICES.setup_help_yes" class="input-field w-20 text-center" min="0" placeholder="25" /></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Website Type -->
+                                    <div class="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Website Type <span class="text-gray-400 font-normal">(one-time)</span></div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Simple</span><input type="number" x-model.number="settingsForm.PRICES.website_simple" class="input-field w-16 text-center" min="0" placeholder="200" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Business</span><input type="number" x-model.number="settingsForm.PRICES.website_business" class="input-field w-16 text-center" min="0" placeholder="300" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Portfolio</span><input type="number" x-model.number="settingsForm.PRICES.website_portfolio" class="input-field w-16 text-center" min="0" placeholder="250" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Blog</span><input type="number" x-model.number="settingsForm.PRICES.website_blog" class="input-field w-16 text-center" min="0" placeholder="250" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Ecom Small</span><input type="number" x-model.number="settingsForm.PRICES.website_ecom_small" class="input-field w-16 text-center" min="0" placeholder="450" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Ecom Large</span><input type="number" x-model.number="settingsForm.PRICES.website_ecom_large" class="input-field w-16 text-center" min="0" placeholder="600" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Booking</span><input type="number" x-model.number="settingsForm.PRICES.website_booking" class="input-field w-16 text-center" min="0" placeholder="400" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Membership</span><input type="number" x-model.number="settingsForm.PRICES.website_membership" class="input-field w-16 text-center" min="0" placeholder="450" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Directory</span><input type="number" x-model.number="settingsForm.PRICES.website_directory" class="input-field w-16 text-center" min="0" placeholder="500" /></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pages -->
+                                    <div class="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Extra Pages <span class="text-gray-400 font-normal">(each)</span></div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Home</span><input type="number" x-model.number="settingsForm.PRICES.page_home" class="input-field w-16 text-center" min="0" placeholder="0" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>About</span><input type="number" x-model.number="settingsForm.PRICES.page_about" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Services</span><input type="number" x-model.number="settingsForm.PRICES.page_services" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Portfolio</span><input type="number" x-model.number="settingsForm.PRICES.page_portfolio" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Blog</span><input type="number" x-model.number="settingsForm.PRICES.page_blog" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Contact</span><input type="number" x-model.number="settingsForm.PRICES.page_contact" class="input-field w-16 text-center" min="0" placeholder="0" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>FAQ</span><input type="number" x-model.number="settingsForm.PRICES.page_faq" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Testimonials</span><input type="number" x-model.number="settingsForm.PRICES.page_testimonials" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Gallery</span><input type="number" x-model.number="settingsForm.PRICES.page_gallery" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Team</span><input type="number" x-model.number="settingsForm.PRICES.page_team" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Pricing</span><input type="number" x-model.number="settingsForm.PRICES.page_pricing" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Privacy</span><input type="number" x-model.number="settingsForm.PRICES.page_privacy" class="input-field w-16 text-center" min="0" placeholder="10" /></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Features -->
+                                    <div class="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Features / Add-ons <span class="text-gray-400 font-normal">(one-time)</span></div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Contact Form</span><input type="number" x-model.number="settingsForm.PRICES.feature_contact_form" class="input-field w-16 text-center" min="0" placeholder="0" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>WhatsApp</span><input type="number" x-model.number="settingsForm.PRICES.feature_whatsapp" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Gallery</span><input type="number" x-model.number="settingsForm.PRICES.feature_gallery" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Slider</span><input type="number" x-model.number="settingsForm.PRICES.feature_slider" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Google Maps</span><input type="number" x-model.number="settingsForm.PRICES.feature_maps" class="input-field w-16 text-center" min="0" placeholder="10" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Social Media</span><input type="number" x-model.number="settingsForm.PRICES.feature_social" class="input-field w-16 text-center" min="0" placeholder="0" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Newsletter</span><input type="number" x-model.number="settingsForm.PRICES.feature_newsletter" class="input-field w-16 text-center" min="0" placeholder="25" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>SEO</span><input type="number" x-model.number="settingsForm.PRICES.feature_seo" class="input-field w-16 text-center" min="0" placeholder="40" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Search Bar</span><input type="number" x-model.number="settingsForm.PRICES.feature_search" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Multi Lang</span><input type="number" x-model.number="settingsForm.PRICES.feature_multi_lang" class="input-field w-16 text-center" min="0" placeholder="80" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Members Area</span><input type="number" x-model.number="settingsForm.PRICES.feature_members" class="input-field w-16 text-center" min="0" placeholder="60" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Payments</span><input type="number" x-model.number="settingsForm.PRICES.feature_payments" class="input-field w-16 text-center" min="0" placeholder="50" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Booking</span><input type="number" x-model.number="settingsForm.PRICES.feature_booking" class="input-field w-16 text-center" min="0" placeholder="75" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Events</span><input type="number" x-model.number="settingsForm.PRICES.feature_events" class="input-field w-16 text-center" min="0" placeholder="40" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Donations</span><input type="number" x-model.number="settingsForm.PRICES.feature_donations" class="input-field w-16 text-center" min="0" placeholder="30" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Job Listings</span><input type="number" x-model.number="settingsForm.PRICES.feature_jobs" class="input-field w-16 text-center" min="0" placeholder="40" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Forum</span><input type="number" x-model.number="settingsForm.PRICES.feature_forum" class="input-field w-16 text-center" min="0" placeholder="60" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Testimonials</span><input type="number" x-model.number="settingsForm.PRICES.feature_testimonials" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Cookies</span><input type="number" x-model.number="settingsForm.PRICES.feature_cookies" class="input-field w-16 text-center" min="0" placeholder="15" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Analytics</span><input type="number" x-model.number="settingsForm.PRICES.feature_analytics" class="input-field w-16 text-center" min="0" placeholder="20" /></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Design & Content -->
+                                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Logo</div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Need logo</span><input type="number" x-model.number="settingsForm.PRICES.logo_yes" class="input-field w-16 text-center" min="0" placeholder="50" /></label>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Text Content</div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Need help writing</span><input type="number" x-model.number="settingsForm.PRICES.content_text_help" class="input-field w-16 text-center" min="0" placeholder="50" /></label>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Photos</div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>Free stock photos</span><input type="number" x-model.number="settingsForm.PRICES.photos_stock" class="input-field w-16 text-center" min="0" placeholder="30" /></label>
+                                            </div>
+                                        </div>
+                                        <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Timeline</div>
+                                            <div class="space-y-1.5">
+                                                <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400"><span>1-week rush</span><input type="number" x-model.number="settingsForm.PRICES.timeline_1_week" class="input-field w-16 text-center" min="0" placeholder="50" /></label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Maintenance -->
+                                    <div class="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                                        <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Monthly Maintenance <span class="text-gray-400 font-normal">(per month)</span></div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>None</span><input type="number" x-model.number="settingsForm.PRICES.maintenance_no" class="input-field w-16 text-center" min="0" placeholder="0" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Basic</span><input type="number" x-model.number="settingsForm.PRICES.maintenance_basic" class="input-field w-16 text-center" min="0" placeholder="25" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Standard</span><input type="number" x-model.number="settingsForm.PRICES.maintenance_standard" class="input-field w-16 text-center" min="0" placeholder="40" /></label>
+                                            <label class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50"><span>Premium</span><input type="number" x-model.number="settingsForm.PRICES.maintenance_premium" class="input-field w-16 text-center" min="0" placeholder="60" /></label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total estimate -->
+                                    <div class="mt-3 flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-900/50">
+                                        <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">Prices saved. The intake form reads these from your browser.</span>
+                                        <span class="text-xs text-blue-600 dark:text-blue-400">Blank = uses HTML defaults</span>
+                                    </div>
+                                </div>
+
                                 <!-- Danger zone -->
                                 <div class="pt-4 border-t border-red-200 dark:border-red-900/50">
                                     <div class="flex items-center gap-2 mb-3">
@@ -866,11 +1118,37 @@
                     SESSION_EXPIRY_HOURS: 24,
                     DATE_STYLE: 'short',
                     STORAGE_AUTH: CONFIG.STORAGE_KEYS.AUTH,
-                    STORAGE_DARKMODE: CONFIG.STORAGE_KEYS.DARKMODE
+                    STORAGE_DARKMODE: CONFIG.STORAGE_KEYS.DARKMODE,
+                    PRICES: {
+                        domain_need: 14, domain_no_need: 0,
+                        hosting_need: 48, hosting_no_need: 0,
+                        email_need: 15, email_no_need: 0,
+                        setup_help_yes: 25,
+                        website_simple: 200, website_business: 300, website_portfolio: 250, website_blog: 250,
+                        website_ecom_small: 450, website_ecom_large: 600, website_booking: 400,
+                        website_membership: 450, website_directory: 500,
+                        page_home: 0, page_about: 15, page_services: 15, page_portfolio: 20,
+                        page_blog: 20, page_contact: 0, page_faq: 15, page_testimonials: 15,
+                        page_gallery: 20, page_team: 15, page_pricing: 15, page_privacy: 10,
+                        feature_contact_form: 0, feature_whatsapp: 15, feature_gallery: 20,
+                        feature_slider: 20, feature_maps: 10, feature_social: 0,
+                        feature_newsletter: 25, feature_seo: 40, feature_search: 15,
+                        feature_multi_lang: 80, feature_members: 60, feature_payments: 50,
+                        feature_booking: 75, feature_events: 40, feature_donations: 30,
+                        feature_jobs: 40, feature_forum: 60, feature_testimonials: 15,
+                        feature_cookies: 15, feature_analytics: 20,
+                        logo_yes: 50, content_text_help: 50, photos_stock: 30,
+                        timeline_1_week: 50,
+                        maintenance_no: 0, maintenance_basic: 25, maintenance_standard: 40, maintenance_premium: 60
+                    }
                 };
                 try {
                     if (saved) {
                         const parsed = JSON.parse(saved);
+                        // Merge nested prices
+                        if (parsed.PRICES) {
+                            parsed.PRICES = { ...defaults.PRICES, ...parsed.PRICES };
+                        }
                         this.settingsForm = { ...defaults, ...parsed };
                     } else {
                         this.settingsForm = defaults;
@@ -886,6 +1164,10 @@
                     this.settingsForm.STORAGE_AUTH = CONFIG.STORAGE_KEYS.AUTH;
                     this.settingsForm.STORAGE_DARKMODE = CONFIG.STORAGE_KEYS.DARKMODE;
                     localStorage.setItem('amworx_dashboard_settings', JSON.stringify(this.settingsForm));
+                    // Save prices separately for the intake form to read
+                    if (this.settingsForm.PRICES) {
+                        localStorage.setItem('amworx_pricing', JSON.stringify(this.settingsForm.PRICES));
+                    }
                     this.settingsSaved = true;
                     document.title = (this.settingsForm.APP_NAME || CONFIG.APP_NAME) + ' — Admin Dashboard';
                     setTimeout(() => { this.settingsSaved = false; }, 2000);
@@ -899,6 +1181,7 @@
             resetSettings() {
                 if (confirm('Reset all settings to defaults? This cannot be undone.')) {
                     localStorage.removeItem('amworx_dashboard_settings');
+                    localStorage.removeItem('amworx_pricing');
                     this.loadSettings();
                     this.showToast('Settings reset to defaults','ok');
                 }

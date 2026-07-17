@@ -1485,6 +1485,43 @@
         const EMAILJS_TEMPLATE_ID = CONFIG.EMAILJS_TEMPLATE_ID;
 
         // =====================================================================
+        //  PRICING — load overrides from localStorage (set by admin dashboard)
+        //  Falls back to HTML data-price attributes when no override is set.
+        // =====================================================================
+        const PRICES = (function() {
+            try {
+                const saved = localStorage.getItem('amworx_pricing');
+                if (saved) return JSON.parse(saved);
+            } catch(e) {}
+            return {};
+        })();
+
+        // Apply pricing overrides to data-price elements on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (Object.keys(PRICES).length === 0) return;
+            const map = {
+                domain: { 'need': 'domain_need' },
+                hosting: { 'need': 'hosting_need' },
+                email: { 'need': 'email_need' },
+                setup_help: { 'yes': 'setup_help_yes' },
+                website_type: { 'simple': 'website_simple', 'business': 'website_business', 'portfolio': 'website_portfolio', 'blog': 'website_blog', 'ecommerce-small': 'website_ecom_small', 'ecommerce-large': 'website_ecom_large', 'booking': 'website_booking', 'membership': 'website_membership', 'directory': 'website_directory' },
+                logo: { 'yes': 'logo_yes' },
+                content_text: { 'need-help': 'content_text_help' },
+                content_photos: { 'free-stock': 'photos_stock' },
+                timeline: { '1-week': 'timeline_1_week' },
+                maintenance: { 'basic': 'maintenance_basic', 'standard': 'maintenance_standard', 'premium': 'maintenance_premium' }
+            };
+            document.querySelectorAll('[data-price]').forEach(el => {
+                const name = el.getAttribute('name');
+                const val = el.value;
+                const key = map[name]?.[val];
+                if (key && PRICES[key] !== undefined) {
+                    el.dataset.price = PRICES[key];
+                }
+            });
+        });
+
+        // =====================================================================
         //  PRICE CALCULATION ENGINE
         // =====================================================================
 
@@ -1506,7 +1543,7 @@
             const domainEl = document.querySelector('input[name="domain"]:checked');
             if (domainEl) {
                 const v = domainEl.value;
-                if (v === 'need') add('Domain name (1 year)', 14);
+                if (v === 'need') add('Domain name (1 year)', PRICES.domain_need ?? 14);
                 if (v === 'need' || v === 'not-sure') {
                     document.getElementById('domainNameSub').classList.add('visible');
                 } else {
@@ -1515,13 +1552,13 @@
             }
 
             const hostingEl = document.querySelector('input[name="hosting"]:checked');
-            if (hostingEl && hostingEl.value === 'need') add('Website hosting (1 year)', 48);
+            if (hostingEl && hostingEl.value === 'need') add('Website hosting (1 year)', PRICES.hosting_need ?? 48);
 
             const emailEl = document.querySelector('input[name="email"]:checked');
             if (emailEl) {
                 if (emailEl.value === 'need') {
                     const count = parseInt(document.querySelector('select[name="email_count"]')?.value || 1);
-                    add('Business email (1 year)', 15 * count, 1);
+                    add('Business email (1 year)', (PRICES.email_need ?? 15) * count, 1);
                     document.getElementById('emailCountSub').classList.add('visible');
                 } else {
                     document.getElementById('emailCountSub').classList.remove('visible');
@@ -1529,7 +1566,7 @@
             }
 
             const setupEl = document.querySelector('input[name="setup_help"]:checked');
-            if (setupEl && setupEl.value === 'yes') add('Full setup service (domain + hosting + email)', 25);
+            if (setupEl && setupEl.value === 'yes') add('Full setup service (domain + hosting + email)', PRICES.setup_help_yes ?? 25);
 
             // ----- Section 3: Website Type -----
             const typeEl = document.querySelector('input[name="website_type"]:checked');
@@ -1553,18 +1590,18 @@
 
             // ----- Section 5: Logo -----
             const logoEl = document.querySelector('input[name="logo"]:checked');
-            if (logoEl && logoEl.value === 'yes') add('Logo design', 50);
+            if (logoEl && logoEl.value === 'yes') add('Logo design', PRICES.logo_yes ?? 50);
 
             // ----- Section 5: Content help -----
             const textEl = document.querySelector('input[name="content_text"]:checked');
-            if (textEl && textEl.value === 'need-help') add('Content writing service', 50);
+            if (textEl && textEl.value === 'need-help') add('Content writing service', PRICES.content_text_help ?? 50);
 
             const photoEl = document.querySelector('input[name="content_photos"]:checked');
-            if (photoEl && photoEl.value === 'free-stock') add('Stock photo sourcing', 30);
+            if (photoEl && photoEl.value === 'free-stock') add('Stock photo sourcing', PRICES.photos_stock ?? 30);
 
             // ----- Section 6: Timeline rush -----
             const timelineEl = document.querySelector('input[name="timeline"]:checked');
-            if (timelineEl && timelineEl.value === '1-week') add('Rush delivery (1 week)', 50);
+            if (timelineEl && timelineEl.value === '1-week') add('Rush delivery (1 week)', PRICES.timeline_1_week ?? 50);
 
             // ----- Section 6: Maintenance (first month shown as setup) -----
             const maintEl = document.querySelector('input[name="maintenance"]:checked');
