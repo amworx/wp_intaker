@@ -11,6 +11,29 @@
         // Apply dark mode before paint to prevent flash
         (function(){try{if(localStorage.getItem('amworx_darkmode')==='true')document.documentElement.classList.add('dark')}catch(e){}})();
     </script>
+    <script>
+        // =====================================================================
+        //  CONFIG — Edit these values to customize the dashboard
+        // =====================================================================
+        const CONFIG = {
+            APP_NAME: 'AM Worx',
+            APP_NAME_LONG: 'AM Worx Studio',
+            ADMIN_PASSCODE: 'amworx2026',
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbznDI1u6GjuOlO5rFMnp2BkzapEHy1ak34yLvpb09AdGImwMiwEa-TAFL4jn_XT_TiHEQ/exec',
+            FORM_URL: 'https://amworx.github.io/wp_intaker/',
+            STORAGE_KEYS: {
+                AUTH: 'amworx_admin',
+                DARKMODE: 'amworx_darkmode'
+            },
+            AUTO_REFRESH_MS: 60000,
+            TOAST_DURATION_MS: 3000,
+            SESSION_EXPIRY_HOURS: 24,
+            MAX_FILE_SIZE_MB: 25,
+            DATE_FORMAT: { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' } // passed to toLocaleDateString
+        };
+        // Update title from config
+        document.title = CONFIG.APP_NAME + ' — Admin Dashboard';
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://cdn.tailwindcss.com" />
@@ -139,7 +162,7 @@
                         <i class="fas fa-pen-ruler text-white text-xs" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-white tracking-tight">AM Worx</div>
+                        <div class="text-sm font-bold text-white tracking-tight" x-text="CONFIG.APP_NAME"></div>
                         <div class="text-[10px] text-gray-500 font-medium">Admin Dashboard</div>
                     </div>
                 </div>
@@ -167,7 +190,7 @@
                     </a>
 
                     <div class="pt-4 mt-4 border-t border-gray-800/50 space-y-1">
-                        <a href="https://amworx.github.io/wp_intaker/" target="_blank" class="sidebar-link text-gray-500 hover:text-gray-300" aria-label="Open intake form in new tab">
+                        <a :href="CONFIG.FORM_URL" target="_blank" class="sidebar-link text-gray-500 hover:text-gray-300" aria-label="Open intake form in new tab">
                             <i class="fas fa-external-link w-5 text-center text-sm" aria-hidden="true"></i> View Form
                         </a>
                         <a href="#" @click.prevent="logout()" class="sidebar-link text-gray-500 hover:text-red-400">
@@ -377,7 +400,7 @@
                                     </div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">No submissions yet</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Submissions will appear here once clients fill out the form.</p>
-                                    <a href="https://amworx.github.io/wp_intaker/" target="_blank" class="mt-4 btn-secondary inline-flex text-xs">
+                                    <a :href="CONFIG.FORM_URL" target="_blank" class="mt-4 btn-secondary inline-flex text-xs">
                                         <i class="fas fa-external-link" aria-hidden="true"></i> Open Form
                                     </a>
                                 </div>
@@ -587,7 +610,6 @@
             authenticated: false,
             passcode: '',
             loginError: '',
-            ADMIN_PASSCODE: 'amworx2026',
 
             // UI
             sidebarOpen: false,
@@ -611,9 +633,6 @@
             // Auto-refresh
             refreshInterval: null,
             nextRefresh: null,
-
-            // Config
-            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbznDI1u6GjuOlO5rFMnp2BkzapEHy1ak34yLvpb09AdGImwMiwEa-TAFL4jn_XT_TiHEQ/exec',
 
             // ── Field label mapping ──
             FIELD_LABELS: [
@@ -695,23 +714,23 @@
 
             // ── Init ──
             async init() {
-                const saved = sessionStorage.getItem('amworx_admin');
+                const saved = sessionStorage.getItem(CONFIG.STORAGE_KEYS.AUTH);
                 if (saved === '1') {
                     this.authenticated = true;
                     await this.loadSubmissions();
                 } else {
                     this.loading = false;
                 }
-                const dm = localStorage.getItem('amworx_darkmode');
+                const dm = localStorage.getItem(CONFIG.STORAGE_KEYS.DARKMODE);
                 if (dm === 'true') { this.darkMode = true; document.documentElement.classList.add('dark'); }
                 // Auto-refresh countdown
-                this.refreshInterval = setInterval(() => { this.nextRefresh = this.nextRefresh || Date.now() + 60000; }, 1000);
-                setInterval(() => { if (this.authenticated) this.loadSubmissions(); this.nextRefresh = Date.now() + 60000; }, 60000);
+                this.refreshInterval = setInterval(() => { this.nextRefresh = this.nextRefresh || Date.now() + CONFIG.AUTO_REFRESH_MS; }, 1000);
+                setInterval(() => { if (this.authenticated) this.loadSubmissions(); this.nextRefresh = Date.now() + CONFIG.AUTO_REFRESH_MS; }, CONFIG.AUTO_REFRESH_MS);
             },
 
             login() {
-                if (this.passcode === this.ADMIN_PASSCODE) {
-                    sessionStorage.setItem('amworx_admin','1');
+                if (this.passcode === CONFIG.ADMIN_PASSCODE) {
+                    sessionStorage.setItem(CONFIG.STORAGE_KEYS.AUTH,'1');
                     this.authenticated = true; this.loginError = '';
                     this.loadSubmissions();
                 } else {
@@ -719,20 +738,20 @@
                 }
             },
             logout() {
-                sessionStorage.removeItem('amworx_admin');
+                sessionStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
                 this.authenticated = false; this.submissions = []; this.detailRow = null;
             },
             toggleDark() {
                 this.darkMode = !this.darkMode;
                 document.documentElement.classList.toggle('dark');
-                localStorage.setItem('amworx_darkmode', this.darkMode);
+                localStorage.setItem(CONFIG.STORAGE_KEYS.DARKMODE, this.darkMode);
             },
 
             // ── API ──
             async loadSubmissions() {
                 this.loading = true; this.loadError = '';
                 try {
-                    const resp = await fetch(this.APPS_SCRIPT_URL + '?action=list');
+                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=list');
                     const text = await resp.text();
                     let data;
                     try { data = JSON.parse(text); } catch(e) { throw new Error('Invalid server response'); }
@@ -742,7 +761,7 @@
                     this.submissions = data.rows || [];
                     this.connected = true;
                     this.loading = false;
-                    this.nextRefresh = Date.now() + 60000;
+                    this.nextRefresh = Date.now() + CONFIG.AUTO_REFRESH_MS;
                 } catch (err) {
                     this.loadError = err.message; this.connected = false; this.loading = false;
                 }
@@ -750,7 +769,7 @@
 
             formatDate(ts) {
                 if (!ts) return '—';
-                try { const d = new Date(ts); if (isNaN(d.getTime())) return ts; return d.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+                try { const d = new Date(ts); if (isNaN(d.getTime())) return ts; return d.toLocaleDateString('en-US', CONFIG.DATE_FORMAT); }
                 catch(e) { return ts; }
             },
             getOriginalIndex(row) { return this.submissions.indexOf(row); },
@@ -759,7 +778,7 @@
 
             async toggleReviewed(idx) {
                 try {
-                    const resp = await fetch(this.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
+                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Status updated','ok'); await this.loadSubmissions(); this.closeDetail(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -767,7 +786,7 @@
             },
             async quickToggle(idx) {
                 try {
-                    const resp = await fetch(this.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
+                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Status updated','ok'); await this.loadSubmissions(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -777,7 +796,7 @@
             async doDelete() {
                 const idx = this.deleteTarget; this.deleteTarget = null;
                 try {
-                    const resp = await fetch(this.APPS_SCRIPT_URL + '?action=delete&index=' + idx);
+                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=delete&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Deleted','ok'); await this.loadSubmissions(); this.closeDetail(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -787,7 +806,7 @@
             showToast(msg, type) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
                 this.toast = { show: true, message: msg, type: type||'' };
-                this.toastTimer = setTimeout(() => { this.toast.show = false; }, 3000);
+                this.toastTimer = setTimeout(() => { this.toast.show = false; }, CONFIG.TOAST_DURATION_MS);
             }
         };
     }

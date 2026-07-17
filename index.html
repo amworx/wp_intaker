@@ -1438,38 +1438,51 @@
         //  EDIT YOUR PRICES HERE
         //  (These are defaults — change to match your actual rates)
         // =====================================================================
-        // NOTE: Individual item prices are set in the HTML data-price attributes.
-        // Update them directly in the HTML above if you need different prices.
+        //  CONFIG — Edit these values to customize the intake form
         // =====================================================================
+        const CONFIG = {
+            // ── Studio Info ──
+            STUDIO_NAME: 'AM Worx Studio',
+            STUDIO_EMAIL: 'amworxx@gmail.com',
+            STUDIO_URL: 'https://amworx.github.io/wp_intaker/',
+            LOGO_URL: 'https://amworx.github.io/wp_intaker/logo.png',
 
-        // =====================================================================
-        //  EMAIL DELIVERY BACKEND
-        //  Primary: Google Apps Script → Gmail → amworxx@gmail.com
-        //  (HTML email body with PDF + file attachments. 100% free.)
-        //  Deploy per docs/google-apps-script.md, paste the Web App URL below.
-        // =====================================================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznDI1u6GjuOlO5rFMnp2BkzapEHy1ak34yLvpb09AdGImwMiwEa-TAFL4jn_XT_TiHEQ/exec';
-        const STUDIO_EMAIL = 'amworxx@gmail.com';
+            // ── Email Delivery ──
+            // Primary: Google Apps Script → Gmail (HTML email + PDF + attachments, 100% free)
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbznDI1u6GjuOlO5rFMnp2BkzapEHy1ak34yLvpb09AdGImwMiwEa-TAFL4jn_XT_TiHEQ/exec',
+            // Fallback (text-only, no attachments):
+            FORM_SUBMIT_URL: 'https://formsubmit.co/ajax/amworxx@gmail.com',
 
-        // FormSubmit AJAX endpoint (fallback only — does NOT deliver attachments,
-        // but reliably delivers text when no other path works).
-        const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
+            // ── EmailJS (OTP delivery only) ──
+            // Sign up free at https://www.emailjs.com/
+            // Template 'otp_template' variables: {{email}}, {{passcode}}, {{company_name}},
+            //   {{time}}, {{year}}, {{device}}, {{browser}}, {{location}},
+            //   {{request_time}}, {{logo_url}}, {{support_url}}, {{to_email}}
+            EMAILJS_PUBLIC_KEY: 'UVIFF194EIvto7_0v',
+            EMAILJS_SERVICE_ID: 'otp_wp_intake',
+            EMAILJS_TEMPLATE_ID: 'otp_template',
 
-        // =====================================================================
-        //  EMAILJS CONFIG
-        //  Sign up free at https://www.emailjs.com/
-        //  Used only for OTP code delivery.  200 emails/month free.
-        //  1. Create an Email Service  →  copy Service ID
-        //  2. Template 'otp_template' with variables: {{email}}, {{passcode}},
-        //     {{company_name}}, {{time}}, {{year}}, {{device}}, {{browser}},
-        //     {{location}}, {{request_time}}, {{logo_url}}, {{support_url}},
-        //     {{to_email}}
-        //  3. Go to Account → API Keys  →  copy Public Key
-        // =====================================================================
-        const EMAILJS_PUBLIC_KEY = 'UVIFF194EIvto7_0v';
-        const EMAILJS_SERVICE_ID = 'otp_wp_intake';
-        const EMAILJS_TEMPLATE_ID = 'otp_template';
-        emailjs.init(EMAILJS_PUBLIC_KEY);
+            // ── Pricing config ──
+            // Individual item prices are set via data-price HTML attributes above.
+            // This section is for global pricing rules only.
+            CURRENCY_SYMBOL: '$',
+            PRICE_SUFFIX: '/mo',
+
+            // ── Misc ──
+            OTP_EXPIRY_SECONDS: 300,
+            MAX_FILE_SIZE_MB: 25
+        };
+
+        // Init EmailJS
+        emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+
+        // Backward-compatible aliases (existing code uses these names)
+        const STUDIO_EMAIL = CONFIG.STUDIO_EMAIL;
+        const APPS_SCRIPT_URL = CONFIG.APPS_SCRIPT_URL;
+        const FORM_SUBMIT_URL = CONFIG.FORM_SUBMIT_URL;
+        const EMAILJS_PUBLIC_KEY = CONFIG.EMAILJS_PUBLIC_KEY;
+        const EMAILJS_SERVICE_ID = CONFIG.EMAILJS_SERVICE_ID;
+        const EMAILJS_TEMPLATE_ID = CONFIG.EMAILJS_TEMPLATE_ID;
 
         // =====================================================================
         //  PRICE CALCULATION ENGINE
@@ -1769,7 +1782,7 @@
                 const templateParams = {
                     email: email,
                     to_email: email,
-                    company_name: 'AM Worx Studio',
+                    company_name: CONFIG.STUDIO_NAME,
                     passcode: generatedOtp,
                     time: timeStr,
                     year: now.getFullYear().toString(),
@@ -1777,8 +1790,8 @@
                     browser: browserStr,
                     location: 'IP detected on login',
                     request_time: now.toLocaleString(),
-                    logo_url: 'https://amworx.github.io/wp_intaker/logo.png',
-                    support_url: 'mailto:amworxx@gmail.com'
+                    logo_url: CONFIG.LOGO_URL,
+                    support_url: 'mailto:' + CONFIG.STUDIO_EMAIL
                 };
 
                 const result = await emailjs.send(
@@ -1988,7 +2001,7 @@
             doc.setFontSize(22);
             doc.setTextColor(22, 101, 52);
             doc.setFont(undefined, 'bold');
-            const titleLines = wrap('AM Worx Studio — Website Request', 22, contentWidth);
+            const titleLines = wrap(CONFIG.STUDIO_NAME + ' — Website Request', 22, contentWidth);
             titleLines.forEach((l, i) => { doc.text(l, M, y); y += (i === 0 ? 9 : 7); });
             doc.setFontSize(10);
             doc.setTextColor(100, 116, 139);
@@ -2070,7 +2083,7 @@
                 doc.setFontSize(8);
                 doc.setTextColor(180, 180, 180);
                 doc.setFont(undefined, 'normal');
-                doc.text('AM Worx Studio — Page ' + i + ' of ' + pc, M, 295);
+                doc.text(CONFIG.STUDIO_NAME + ' — Page ' + i + ' of ' + pc, M, 295);
             }
 
             const blob = doc.output('blob');
@@ -2154,7 +2167,7 @@
                 '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;">' +
                 rows +
                 '</table>' +
-                '<div style="padding:14px 4px;color:#94a3b8;font-size:11px;text-align:center;">Sent from the AM Worx Studio intake form</div>' +
+                '<div style="padding:14px 4px;color:#94a3b8;font-size:11px;text-align:center;">Sent from the ' + CONFIG.STUDIO_NAME + ' intake form</div>' +
                 '</div>';
         }
 
