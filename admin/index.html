@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AM Worx — Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d5a87);
+            color: #fff;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .header .sub {
+            font-size: 13px;
+            color: #b8d4f0;
+        }
+        .header a {
+            color: #b8d4f0;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .header a:hover { color: #fff; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-right .badge {
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ── Login Gate ── */
+        #loginGate {
+            max-width: 400px;
+            margin: 80px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        #loginGate h2 { font-size: 18px; margin-bottom: 8px; }
+        #loginGate p { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+        #loginGate input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: center;
+            letter-spacing: 4px;
+            outline: none;
+        }
+        #loginGate input:focus { border-color: #2d5a87; box-shadow: 0 0 0 3px rgba(45,90,135,0.15); }
+        #loginGate button {
+            margin-top: 16px;
+            width: 100%;
+            padding: 12px;
+            background: #2d5a87;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #loginGate button:hover { background: #1e3a5f; }
+        #loginError { color: #dc2626; font-size: 13px; margin-top: 10px; display: none; }
+
+        /* ── Stats Bar ── */
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px 20px;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d5a87;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* ── Table ── */
+        .table-wrap {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: #f9fafb;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+        th:hover { background: #f3f4f6; }
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+        tr:hover td { background: #f9fafb; }
+        tr.reviewed td { opacity: 0.65; }
+        .clickable { cursor: pointer; }
+
+        /* Status badge */
+        .badge-new {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-reviewed {
+            display: inline-block;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .empty {
+            text-align: center;
+            padding: 48px;
+            color: #9ca3af;
+        }
+
+        /* ── Detail Panel (slide-in) ── */
+        .detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .detail-overlay.open { display: flex; }
+        .detail-panel {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 640px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 28px 32px;
+        }
+        .detail-panel h2 { font-size: 18px; margin-bottom: 4px; }
+        .detail-panel .sub { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .detail-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: top;
+        }
+        .detail-table td:first-child {
+            font-weight: 600;
+            color: #374151;
+            width: 36%;
+            white-space: nowrap;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .detail-actions button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-reviewed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .btn-reviewed:hover { background: #a7f3d0; }
+        .btn-unreviewed {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .btn-unreviewed:hover { background: #fde68a; }
+        .btn-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-delete:hover { background: #fecaca; }
+        .btn-close {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-close:hover { background: #e5e7eb; }
+
+        /* ── Empty login message ── */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: #6b7280;
+        }
+        .loading .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #2d5a87;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Search ── */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .toolbar input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .toolbar input:focus { border-color: #2d5a87; }
+        .toolbar .refresh-btn {
+            padding: 10px 18px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .toolbar .refresh-btn:hover { background: #f9fafb; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1f2937;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 200;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.ok { background: #065f46; }
+        .toast.err { background: #991b1b; }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .container { padding: 12px; }
+            .header { padding: 14px 16px; }
+            .header h1 { font-size: 16px; }
+            .stat-card .num { font-size: 22px; }
+            .detail-panel { padding: 20px 16px; }
+            th, td { padding: 8px 10px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+    <div>
+        <h1>AM Worx Dashboard</h1>
+        <div class="sub">Intake submissions &amp; survey management</div>
+    </div>
+    <div class="header-right">
+        <span class="badge" id="subCount">0 submissions</span>
+        <a href="https://amworx.github.io/wp_intaker/" target="_blank">Open form &rarr;</a>
+        <a href="#" id="logoutLink" style="display:none">Log out</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ── Login Gate ── -->
+    <div id="loginGate">
+        <h2>Admin Access</h2>
+        <p>Enter the passcode to manage submissions.</p>
+        <input type="password" id="passcodeInput" placeholder="Passcode" maxlength="20" autocomplete="off" />
+        <button id="loginBtn">Unlock Dashboard</button>
+        <div id="loginError">Incorrect passcode</div>
+    </div>
+
+    <!-- ── Dashboard (hidden until login) ── -->
+    <div id="dashboard" style="display:none">
+
+        <!-- Stats -->
+        <div class="stats" id="statsRow"></div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="Search name, email, business..." />
+            <button class="refresh-btn" id="refreshBtn">&#8635; Refresh</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <div id="loadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <div>Loading submissions...</div>
+            </div>
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Detail Modal ── -->
+<div class="detail-overlay" id="detailOverlay">
+    <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // =====================================================================
+    //  CONFIGURATION
+    // =====================================================================
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj2HOffIfa1cqQDYrEYTgzxEJBXuwCu8V5GYBQ1_XNaG7uYX6ukbhrYcYSZQf8tB62pw/exec';
+    const ADMIN_PASSCODE = 'amworx2026'; // ← CHANGE THIS after first login
+
+    // =====================================================================
+    //  STATE
+    // =====================================================================
+    let allSubmissions = [];
+    let currentDetailIndex = null;
+
+    // =====================================================================
+    //  LOGIN
+    // =====================================================================
+    const passcodeInput = document.getElementById('passcodeInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const loginGate = document.getElementById('loginGate');
+    const dashboard = document.getElementById('dashboard');
+    const logoutLink = document.getElementById('logoutLink');
+
+    function checkLogin() {
+        const saved = sessionStorage.getItem('amworx_admin');
+        if (saved === '1') {
+            loginGate.style.display = 'none';
+            dashboard.style.display = 'block';
+            logoutLink.style.display = 'inline';
+            loadSubmissions();
+        }
+    }
+
+    function doLogin() {
+        const val = passcodeInput.value.trim();
+        if (val === ADMIN_PASSCODE) {
+            sessionStorage.setItem('amworx_admin', '1');
+            loginError.style.display = 'none';
+            loginGate.style.display = 'none';
+            dashboard.style.display = 'block';
+            logoutLink.style.display = 'inline';
+            loadSubmissions();
+        } else {
+            loginError.style.display = 'block';
+            passcodeInput.value = '';
+            passcodeInput.focus();
+        }
+    }
+
+    loginBtn.addEventListener('click', doLogin);
+    passcodeInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLogin();
+    });
+
+    logoutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        sessionStorage.removeItem('amworx_admin');
+        location.reload();
+    });
+
+    checkLogin();
+
+    // =====================================================================
+    //  API
+    // =====================================================================
+    async function api(action, params) {
+        const url = new URL(APPS_SCRIPT_URL);
+        url.searchParams.set('action', action);
+        if (params) {
+            for (const [k, v] of Object.entries(params)) {
+                url.searchParams.set(k, v);
+            }
+        }
+        try {
+            const resp = await fetch(url.toString(), { method: 'GET' });
+            const text = await resp.text();
+            return JSON.parse(text);
+        } catch (err) {
+            return { success: false, error: err.message };
+        }
+    }
+
+    // =====================================================================
+    //  LOAD SUBMISSIONS
+    // =====================================================================
+    async function loadSubmissions() {
+        const loading = document.getElementById('loadingIndicator');
+        const tableContainer = document.getElementById('tableContainer');
+        loading.style.display = 'block';
+        tableContainer.innerHTML = '';
+
+        const result = await api('list');
+        loading.style.display = 'none';
+
+        if (!result.success) {
+            tableContainer.innerHTML = '<div class="empty">Error loading submissions: ' + (result.error || 'unknown') + '</div>';
+            return;
+        }
+
+        allSubmissions = result.rows || [];
+        renderStats(allSubmissions);
+        renderTable(allSubmissions);
+        document.getElementById('subCount').textContent = allSubmissions.length + ' submission' + (allSubmissions.length === 1 ? '' : 's');
+    }
+
+    // =====================================================================
+    //  STATS
+    // =====================================================================
+    function renderStats(rows) {
+        const total = rows.length;
+        const newCount = rows.filter(function(r) { return r[r.length - 1] === 'New' || !r[r.length - 1]; }).length;
+        const reviewed = total - newCount;
+        const container = document.getElementById('statsRow');
+        container.innerHTML =
+            '<div class="stat-card"><div class="num">' + total + '</div><div class="label">Total</div></div>' +
+            '<div class="stat-card"><div class="num">' + newCount + '</div><div class="label">New</div></div>' +
+            '<div class="stat-card"><div class="num">' + reviewed + '</div><div class="label">Reviewed</div></div>';
+    }
+
+    // =====================================================================
+    //  TABLE
+    // =====================================================================
+    function renderTable(rows) {
+        const container = document.getElementById('tableContainer');
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty">No submissions yet.</div>';
+            return;
+        }
+
+        const cols = [
+            { key: 1, label: 'Name', width: '22%' },
+            { key: 2, label: 'Business', width: '18%' },
+            { key: 0, label: 'Date', width: '18%' },
+            { key: 24, label: 'Estimate', width: '10%' },
+            { key: 26, label: 'Files', width: '18%' },
+            { key: 27, label: 'Status', width: '14%' }
+        ];
+
+        let html = '<table><thead><tr>';
+        cols.forEach(function(c) { html += '<th style="width:' + c.width + '">' + c.label + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        rows.forEach(function(r, idx) {
+            const isReviewed = r[27] === 'Reviewed';
+            html += '<tr class="clickable' + (isReviewed ? ' reviewed' : '') + '" data-index="' + idx + '">';
+            cols.forEach(function(c) {
+                let val = r[c.key] || '';
+                if (c.key === 0) {
+                    // Trim timestamp
+                    val = val.substring(0, 16).replace('T', ' ');
+                }
+                if (c.key === 24 && val) {
+                    val = '$' + val.replace('$', '');
+                }
+                if (c.key === 27) {
+                    val = val === 'Reviewed'
+                        ? '<span class="badge-reviewed">&#10003; Reviewed</span>'
+                        : '<span class="badge-new">New</span>';
+                }
+                if (c.key === 26) {
+                    const parts = (val || '').split('; ');
+                    val = parts.length > 1 ? parts.length + ' files' : (parts[0] || '');
+                }
+                html += '<td>' + val + '</td>';
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        // Click handler
+        container.querySelectorAll('tr.clickable').forEach(function(el) {
+            el.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-index'), 10);
+                openDetail(idx);
+            });
+        });
+    }
+
+    // =====================================================================
+    //  SEARCH
+    // =====================================================================
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        if (!q) {
+            renderTable(allSubmissions);
+            renderStats(allSubmissions);
+            return;
+        }
+        const filtered = allSubmissions.filter(function(r) {
+            return (r[1] || '').toLowerCase().includes(q) ||
+                   (r[2] || '').toLowerCase().includes(q) ||
+                   (r[3] || '').toLowerCase().includes(q);
+        });
+        renderTable(filtered);
+        renderStats(filtered);
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadSubmissions);
+
+    // =====================================================================
+    //  DETAIL PANEL
+    // =====================================================================
+    const FIELD_LABELS = [
+        'Timestamp', 'Full Name', 'Business Name', 'Email', 'Phone',
+        'Domain', 'Domain Idea', 'Web Hosting', 'Business Email', 'Email Accounts', 'Setup Help',
+        'Business Description',
+        'Website Type', 'Pages', 'Other Pages',
+        'Features',
+        'Logo', 'Text Content', 'Photos', 'Brand Colors', 'Inspiration Links',
+        'Timeline', 'Maintenance',
+        'Budget Range', 'Extra Notes', 'Estimated Total',
+        'Uploaded Files', 'Status'
+    ];
+
+    function openDetail(index) {
+        currentDetailIndex = index;
+        const r = allSubmissions[index];
+        if (!r) return;
+
+        let rows = '';
+        r.forEach(function(val, i) {
+            const label = FIELD_LABELS[i] || 'Field ' + i;
+            let display = val || '';
+            if (i === 0) {
+                // Timestamp
+            }
+            if (i === 24 && display) {
+                display = '$' + display.replace('$', '');
+            }
+            rows += '<tr><td>' + label + '</td><td>' + display + '</td></tr>';
+        });
+
+        const isReviewed = r[27] === 'Reviewed';
+        const overlay = document.getElementById('detailOverlay');
+        const panel = document.getElementById('detailPanel');
+
+        panel.innerHTML =
+            '<h2>' + (r[1] || 'Anonymous') + '</h2>' +
+            '<div class="sub">' + (r[2] || '') + ' &middot; ' + (r[0] || '') + '</div>' +
+            '<table class="detail-table">' + rows + '</table>' +
+            '<div class="detail-actions">' +
+                '<button class="' + (isReviewed ? 'btn-unreviewed' : 'btn-reviewed') + '" id="detailToggleBtn">' +
+                    (isReviewed ? '&#8635; Mark as New' : '&#10003; Mark Reviewed') +
+                '</button>' +
+                '<button class="btn-delete" id="detailDeleteBtn">&#128465; Delete</button>' +
+                '<button class="btn-close" id="detailCloseBtn">Close</button>' +
+            '</div>';
+
+        overlay.classList.add('open');
+
+        document.getElementById('detailCloseBtn').addEventListener('click', closeDetail);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeDetail();
+        });
+
+        document.getElementById('detailToggleBtn').addEventListener('click', function() {
+            toggleReviewed(index);
+        });
+
+        document.getElementById('detailDeleteBtn').addEventListener('click', function() {
+            if (confirm('Delete this submission?')) deleteSubmission(index);
+        });
+    }
+
+    function closeDetail() {
+        document.getElementById('detailOverlay').classList.remove('open');
+        currentDetailIndex = null;
+    }
+
+    // =====================================================================
+    //  ACTIONS
+    // =====================================================================
+    async function toggleReviewed(index) {
+        const result = await api('reviewed', { index: index });
+        if (result.success) {
+            showToast('Review status toggled', 'ok');
+            await loadSubmissions();
+            closeDetail();
+        } else {
+            showToast('Failed: ' + (result.error || 'unknown'), 'err');
+        }
+    }
+
+    async function deleteSubmission(index) {
+        const result = await api('delete', { index: index });
+        if (result.success) {
+            showToast('Submission deleted', 'ok');
+            await loadSubmissions();
+            closeDetail();
+        } else {
+            showToast('Failed: ' + (result.error || 'unknown'), 'err');
+        }
+    }
+
+    // =====================================================================
+    //  TOAST
+    // =====================================================================
+    function showToast(msg, type) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'toast ' + (type || '');
+        el.classList.add('show');
+        clearTimeout(el._timer);
+        el._timer = setTimeout(function() { el.classList.remove('show'); }, 3000);
+    }
+
+    // =====================================================================
+    //  INIT
+    // =====================================================================
+    // Auto-refresh every 60 seconds when dashboard is visible
+    setInterval(function() {
+        if (dashboard.style.display !== 'none') {
+            loadSubmissions();
+        }
+    }, 60000);
+</script>
+
+</body>
+</html>

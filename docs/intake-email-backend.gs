@@ -1,20 +1,26 @@
 /**
- * AM Worx Intake - Email Backend
- * Receives form submissions + file attachments and forwards to studio Gmail.
+ * AM Worx Intake - Email Backend + Sheet Storage
+ * 
+ * Receives form submissions, forwards to studio Gmail WITH attachments,
+ * AND stores every submission in a Google Sheet for the admin dashboard.
+ *
+ * On first run it auto-creates the Sheet.
+ * You can find it in your Google Drive: "AM Worx - Submissions".
  */
 
 const STUDIO_EMAIL = 'amworxx@gmail.com';
+const SHEET_NAME = 'AM Worx - Submissions';
 
+// ─── POST ───────────────────────────────────────────────────────────────────
 function doPost(e) {
   try {
-    // Body may arrive as text/plain (preferred for browser CORS) or application/json.
-    // Just parse the raw text - same JSON regardless of declared content-type.
     const raw = e.postData.contents;
     const data = JSON.parse(raw);
     const form = data.form || {};
     const files = data.files || [];
     const requestTime = data.request_time || new Date().toLocaleString();
 
+    // 1. Build attachments and send email
     const attachments = (files || []).map(function(f) {
       return Utilities.newBlob(
         Utilities.base64Decode(f.content),
@@ -24,7 +30,6 @@ function doPost(e) {
     });
 
     const htmlBody = buildEmailHtml(form, requestTime);
-
     const fullName = form.full_name || 'Anonymous';
     const business = form.business_name ? ' - ' + form.business_name : '';
     const subject = 'New Website Request - ' + fullName + business;
@@ -35,6 +40,14 @@ function doPost(e) {
       htmlBody: htmlBody,
       attachments: attachments
     });
+
+    // 2. Store in Google Sheet
+    try {
+      saveToSheet(form, files, requestTime);
+    } catch (sheetErr) {
+      // Don't fail the response if sheet write fails
+      console.warn('Sheet write failed:', sheetErr.message);
+    }
 
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
@@ -49,25 +62,162 @@ function doPost(e) {
   }
 }
 
-/**
- * CORS preflight handler.
- * Browser fetches with non-simple Content-Type (application/json) send an
- * OPTIONS request first. Without this handler Apps Script returns 405 and
- * the browser cancels the actual POST. This returns 200 + CORS headers so
- * the real POST goes through.
- */
+// ─── GET ────────────────────────────────────────────────────────────────────
+function doGet(e) {
+  const action = e && e.parameter ? e.parameter.action : '';
+
+  // Admin: list submissions from Sheet
+  if (action === 'list') {
+    try {
+      const ss = getOrCreateSheet_();
+      const sheet = ss.getActiveSheet();
+      const data = sheet.getDataRange().getValues();
+      if (data.length < 2) {
+        return jsonResponse({ success: true, headers: [], rows: [] });
+      }
+      const headers = data[0];
+      const rows = data.slice(1).reverse(); // newest first
+      return jsonResponse({ success: true, headers: headers, rows: rows });
+    } catch (err) {
+      return jsonResponse({ success: false, error: err.message });
+    }
+  }
+
+  // Admin: delete a submission by row index
+  if (action === 'delete') {
+    try {
+      const index = parseInt(e.parameter.index, 10);
+      if (isNaN(index) || index < 0) throw new Error('Invalid index');
+      const ss = getOrCreateSheet_();
+      const sheet = ss.getActiveSheet();
+      // index is 0-based from the reversed list on the client, so:
+      // row in sheet = data.length - index
+      const data = sheet.getDataRange().getValues();
+      const rowNum = data.length - index; // +1 for header
+      if (rowNum < 2) throw new Error('Row not found');
+      sheet.deleteRow(rowNum);
+      return jsonResponse({ success: true });
+    } catch (err) {
+      return jsonResponse({ success: false, error: err.message });
+    }
+  }
+
+  // Admin: mark as reviewed
+  if (action === 'reviewed') {
+    try {
+      const index = parseInt(e.parameter.index, 10);
+      if (isNaN(index) || index < 0) throw new Error('Invalid index');
+      const ss = getOrCreateSheet_();
+      const sheet = ss.getActiveSheet();
+      const data = sheet.getDataRange().getValues();
+      const rowNum = data.length - index;
+      if (rowNum < 2) throw new Error('Row not found');
+      const lastCol = sheet.getLastColumn();
+      const currentVal = sheet.getRange(rowNum, lastCol).getValue();
+      sheet.getRange(rowNum, lastCol).setValue(currentVal === 'Reviewed' ? '' : 'Reviewed');
+      return jsonResponse({ success: true });
+    } catch (err) {
+      return jsonResponse({ success: false, error: err.message });
+    }
+  }
+
+  // Default: health check
+  return jsonResponse({
+    status: 'OK',
+    service: 'AM Worx Intake'
+  });
+}
+
 function doOptions() {
   return ContentService.createTextOutput('')
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doGet() {
-  return ContentService.createTextOutput(JSON.stringify({
-    status: 'OK',
-    service: 'AM Worx Intake',
-    email: STUDIO_EMAIL
-  })).setMimeType(ContentService.MimeType.JSON);
+// ─── SHEET STORAGE ──────────────────────────────────────────────────────────
+
+function getOrCreateSheet_() {
+  const props = PropertiesService.getScriptProperties();
+  let sheetId = props.getProperty('SHEET_ID');
+
+  if (!sheetId) {
+    const ss = SpreadsheetApp.create(SHEET_NAME);
+    sheetId = ss.getId();
+    props.setProperty('SHEET_ID', sheetId);
+
+    // Set up headers
+    const sheet = ss.getActiveSheet();
+    sheet.setFrozenRows(1);
+    sheet.getRange('1:1').setFontWeight('bold');
+    sheet.appendRow([
+      'Timestamp', 'Full Name', 'Business', 'Email', 'Phone',
+      'Domain', 'Domain Idea', 'Hosting', 'Business Email', 'Email Accounts', 'Setup Help',
+      'Description',
+      'Website Type', 'Pages', 'Other Pages',
+      'Features',
+      'Logo', 'Text Content', 'Photos', 'Brand Colors', 'Inspiration',
+      'Timeline', 'Maintenance',
+      'Budget', 'Extra Notes', 'Estimated Total',
+      'Files', 'Status'
+    ]);
+  }
+
+  return SpreadsheetApp.openById(sheetId);
 }
+
+function saveToSheet(form, files, requestTime) {
+  const ss = getOrCreateSheet_();
+  const sheet = ss.getActiveSheet();
+
+  function get(key) { return form[key] || ''; }
+  function all(key) {
+    const v = form[key];
+    if (v == null) return '';
+    if (Array.isArray(v)) return v.join(', ');
+    return String(v);
+  }
+
+  const fileNames = files.map(function(f) { return f.name; }).join('; ');
+
+  sheet.appendRow([
+    requestTime,
+    get('full_name'),
+    get('business_name'),
+    get('client_email'),
+    get('client_phone'),
+    get('domain'),
+    get('domain_idea'),
+    get('hosting'),
+    get('email'),
+    get('email_count'),
+    get('setup_help'),
+    get('business_desc'),
+    get('website_type'),
+    all('page'),
+    get('other_pages'),
+    all('feature'),
+    get('logo'),
+    get('content_text'),
+    get('content_photos'),
+    get('brand_colors'),
+    get('inspiration_links'),
+    get('timeline'),
+    get('maintenance'),
+    get('budget'),
+    get('extra_notes'),
+    get('calculated_total') ? '$' + get('calculated_total') : '',
+    fileNames,
+    'New'
+  ]);
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ─── EMAIL HTML BUILDER ─────────────────────────────────────────────────────
 
 function buildEmailHtml(form, requestTime) {
   const LABELS = {

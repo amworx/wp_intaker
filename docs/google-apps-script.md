@@ -261,6 +261,63 @@ MailApp.sendEmail() to amworxx@gmail.com with HTML body + attachments
 Studio sees email in Gmail with everything attached
 ```
 
+---
+
+## Admin Dashboard
+
+The project includes **`admin/index.html`** — a passcode-protected dashboard that reads submissions from the same Google Sheet via GET requests to the Apps Script Web App.
+
+### Setup
+
+The dashboard works automatically once the Apps Script is deployed **with the latest `intake-email-backend.gs`** (which includes `saveToSheet()`, `doGet()`, `getOrCreateSheet_()`). No additional deployment needed.
+
+### Access
+
+1. Navigate to `https://amworx.github.io/wp_intaker/admin/`
+2. Enter the default passcode: **`amworx2026`**
+3. Change the passcode in `admin/index.html`:
+
+```js
+const ADMIN_PASSCODE = 'amworx2026'; // ← change this
+```
+
+### Features
+
+| Feature | Description |
+|---|---|
+| **Login gate** | Simple passcode protection (stored client-side — for convenience, not security) |
+| **Stats bar** | Total / New / Reviewed counts |
+| **Submissions table** | Name, business, date, estimate, file count, status |
+| **Search** | Filter by Name, Business, or Email (client-side) |
+| **Detail modal** | Click any row to see every field in a slide-in panel |
+| **Mark reviewed** | Toggle submissions between "New" and "Reviewed" |
+| **Delete** | Remove submissions from the Sheet |
+| **Auto-refresh** | Polls the Sheet every 60 seconds |
+
+### API Endpoints (used by dashboard)
+
+All calls go to the same Apps Script URL with a `?action=` parameter:
+
+| Action | Method | Description |
+|---|---|---|
+| `?action=list` | GET | Returns all submissions as JSON `{ success, headers, rows }` |
+| `?action=reviewed&index=N` | GET | Toggles the Status column between "New" and "Reviewed" |
+| `?action=delete&index=N` | GET | Deletes the row at reversed index N |
+
+The `index` parameter is 0-based and corresponds to position in the reversed array (newest first), which is how the dashboard displays them. The Apps Script converts it back to the correct sheet row internally.
+
+### Google Sheet
+
+The first time a submission arrives, a Sheet named **"AM Worx - Submissions"** is auto-created in your Google Drive. The Sheet ID is stored in `PropertiesService.getScriptProperties()` so subsequent calls append to the same sheet.
+
+Columns (28 total):
+
+```
+Timestamp | Full Name | Business | Email | Phone | Domain | Domain Idea | Hosting | Business Email | Email Accounts | Setup Help | Description | Website Type | Pages | Other Pages | Features | Logo | Text Content | Photos | Brand Colors | Inspiration | Timeline | Maintenance | Budget | Extra Notes | Estimated Total | Files | Status
+```
+
+---
+
 ## Quick troubleshooting
 
 | Issue | Cause | Fix |
