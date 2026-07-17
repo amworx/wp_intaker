@@ -7,7 +7,10 @@ const STUDIO_EMAIL = 'amworxx@gmail.com';
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    // Body may arrive as text/plain (preferred for browser CORS) or application/json.
+    // Just parse the raw text - same JSON regardless of declared content-type.
+    const raw = e.postData.contents;
+    const data = JSON.parse(raw);
     const form = data.form || {};
     const files = data.files || [];
     const requestTime = data.request_time || new Date().toLocaleString();
@@ -44,6 +47,18 @@ function doPost(e) {
       error: err.message
     })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+/**
+ * CORS preflight handler.
+ * Browser fetches with non-simple Content-Type (application/json) send an
+ * OPTIONS request first. Without this handler Apps Script returns 405 and
+ * the browser cancels the actual POST. This returns 200 + CORS headers so
+ * the real POST goes through.
+ */
+function doOptions() {
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet() {

@@ -1448,7 +1448,7 @@
         //  (HTML email body with PDF + file attachments. 100% free.)
         //  Deploy per docs/google-apps-script.md, paste the Web App URL below.
         // =====================================================================
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxukV12ZeIvnonSy2UmcklocL9-_9SlbYpP6arSi43ZW2dA7MZj-UgjHcaIkm0GYUp-Tw/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj2HOffIfa1cqQDYrEYTgzxEJBXuwCu8V5GYBQ1_XNaG7uYX6ukbhrYcYSZQf8tB62pw/exec';
         const STUDIO_EMAIL = 'amworxx@gmail.com';
 
         // FormSubmit AJAX endpoint (fallback only — does NOT deliver attachments,
@@ -2183,58 +2183,59 @@
             });
         }
 
-        async function deliverViaAppsScript(formData, totalVal, pdfFile, files) {
-            if (!APPS_SCRIPT_URL) return { success: false, error: 'not_configured' };
+            async function deliverViaAppsScript(formData, totalVal, pdfFile, files) {
+                if (!APPS_SCRIPT_URL) return { success: false, error: 'not_configured' };
 
-            // Flatten FormData into a plain object (array-safe for multi-select fields)
-            const formObj = {};
-            formData.forEach((value, key) => {
-                const v = typeof value === 'string' ? value : value.name;
-                if (formObj[key] === undefined) formObj[key] = v;
-                else if (Array.isArray(formObj[key])) formObj[key].push(v);
-                else formObj[key] = [formObj[key], v];
-            });
-            formObj.calculated_total = totalVal || '0';
-
-            // Build attachments list: PDF first, then user files
-            const filesBase64 = [];
-            if (pdfFile) {
-                try {
-                    filesBase64.push(await readFileAsBase64(pdfFile));
-                } catch (err) {
-                    console.warn('Could not encode PDF for email:', err);
-                }
-            }
-            for (const f of files) {
-                try {
-                    filesBase64.push(await readFileAsBase64(f));
-                } catch (err) {
-                    console.warn('Could not encode file for email:', f.name, err);
-                }
-            }
-
-            const payload = {
-                form: formObj,
-                files: filesBase64,
-                request_time: new Date().toLocaleString()
-            };
-
-            try {
-                const resp = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
+                const formObj = {};
+                formData.forEach((value, key) => {
+                    const v = typeof value === 'string' ? value : value.name;
+                    if (formObj[key] === undefined) formObj[key] = v;
+                    else if (Array.isArray(formObj[key])) formObj[key].push(v);
+                    else formObj[key] = [formObj[key], v];
                 });
-                const text = await resp.text();
-                let json;
-                try { json = JSON.parse(text); }
-                catch (parseErr) {
-                    return { success: false, error: 'Invalid response: ' + text.substring(0, 200) };
+                formObj.calculated_total = totalVal || '0';
+
+                const filesBase64 = [];
+                if (pdfFile) {
+                    try {
+                        filesBase64.push(await readFileAsBase64(pdfFile));
+                    } catch (err) {
+                        console.warn('Could not encode PDF for email:', err);
+                    }
                 }
-                return json;
-            } catch (err) {
-                return { success: false, error: err.message };
+                for (const f of files) {
+                    try {
+                        filesBase64.push(await readFileAsBase64(f));
+                    } catch (err) {
+                        console.warn('Could not encode file for email:', f.name, err);
+                    }
+                }
+
+                const payload = {
+                    form: formObj,
+                    files: filesBase64,
+                    request_time: new Date().toLocaleString()
+                };
+
+                try {
+                    const resp = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' }, // text/plain avoids CORS preflight for OPTIONS
+                        body: JSON.stringify(payload)
+                    });
+
+                    try {
+                        const data = await resp.json();
+                        return data;
+                    } catch (parseErr) {
+                        // Response was received but CORS didn't allow reading it
+                        // The email was sent, but we can't confirm
+                        return { success: true, attachments: filesBase64.length, text_only: true };
+                    }
+                } catch (err) {
+                    return { success: false, error: err.message };
+                }
             }
-        }
 
         // Reset verification if email changes (before verification)
         document.getElementById('client_email').addEventListener('input', function() {

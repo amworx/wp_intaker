@@ -13,54 +13,226 @@ This guide shows how to deploy a free Google Apps Script that delivers intake fo
 ## Setup (10 minutes)
 
 ### 1. Open the script file
-Open **`docs/intake-email-backend.gs`** in this repo. It contains the complete Apps Script code (pure JavaScript, no markdown, no special characters). Copy the **entire file contents**.
+Open **`docs/intake-email-backend.gs`** (pure JavaScript, ASCII only) or copy-paste this entire block into the Apps Script editor:
+
+```javascript
+/**
+ * AM Worx Intake - Email Backend
+ * Receives form submissions + file attachments and forwards to studio Gmail.
+ */
+
+const STUDIO_EMAIL = 'amworxx@gmail.com';
+
+function doPost(e) {
+  try {
+    const raw = e.postData.contents;
+    const data = JSON.parse(raw);
+    const form = data.form || {};
+    const files = data.files || [];
+    const requestTime = data.request_time || new Date().toLocaleString();
+
+    const attachments = (files || []).map(function(f) {
+      return Utilities.newBlob(
+        Utilities.base64Decode(f.content),
+        f.type || 'application/octet-stream',
+        f.name
+      );
+    });
+
+    const htmlBody = buildEmailHtml(form, requestTime);
+
+    const fullName = form.full_name || 'Anonymous';
+    const business = form.business_name ? ' - ' + form.business_name : '';
+    const subject = 'New Website Request - ' + fullName + business;
+
+    MailApp.sendEmail({
+      to: STUDIO_EMAIL,
+      subject: subject,
+      htmlBody: htmlBody,
+      attachments: attachments
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      attachments: attachments.length
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'OK',
+    service: 'AM Worx Intake',
+    email: STUDIO_EMAIL
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function buildEmailHtml(form, requestTime) {
+  const LABELS = {
+    full_name: 'Full Name',
+    business_name: 'Business Name',
+    client_email: 'Email',
+    client_phone: 'Phone',
+    domain: 'Domain Name',
+    domain_idea: 'Domain Idea',
+    hosting: 'Web Hosting',
+    email: 'Business Email',
+    email_count: 'Email Accounts',
+    setup_help: 'Setup Assistance',
+    business_desc: 'Business Description',
+    website_type: 'Website Type',
+    page: 'Pages',
+    other_pages: 'Other Pages',
+    feature: 'Features',
+    logo: 'Logo Status',
+    content_text: 'Text Content',
+    content_photos: 'Photos',
+    brand_colors: 'Brand Colors',
+    inspiration_links: 'Inspiration Links',
+    timeline: 'Timeline',
+    maintenance: 'Maintenance',
+    budget: 'Budget Range',
+    extra_notes: 'Extra Notes',
+    calculated_total: 'Estimated Total'
+  };
+
+  const SECTIONS = [
+    ['Personal Information', ['full_name', 'business_name', 'client_email', 'client_phone']],
+    ['Domain & Hosting', ['domain', 'domain_idea', 'hosting', 'email', 'email_count', 'setup_help']],
+    ['Business Information', ['business_desc']],
+    ['Website Type & Pages', ['website_type', 'page', 'other_pages']],
+    ['Features', ['feature']],
+    ['Design & Content', ['logo', 'content_text', 'content_photos', 'brand_colors', 'inspiration_links']],
+    ['Timeline & Maintenance', ['timeline', 'maintenance']],
+    ['Budget', ['budget', 'extra_notes']]
+  ];
+
+  function row(label, val) {
+    return '<tr><td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#374151;font-weight:500;width:40%;vertical-align:top">' +
+      label + '</td><td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#1f2937;vertical-align:top">' +
+      (val || '-') + '</td></tr>';
+  }
+
+  function section(title) {
+    return '<tr><td colspan="2" style="padding:14px;background:#f3f4f6;font-weight:600;color:#1f2937;font-size:15px;border-bottom:1px solid #d1d5db">' +
+      title + '</td></tr>';
+  }
+
+  let htmlRows = '';
+
+  SECTIONS.forEach(function(s) {
+    const title = s[0];
+    const fields = s[1];
+    let hasContent = false;
+    let sectionHtml = '';
+
+    fields.forEach(function(key) {
+      const value = form[key];
+      if (value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')) {
+        hasContent = true;
+        const label = LABELS[key] || key;
+        let display;
+        if (Array.isArray(value)) {
+          display = value.join(', ');
+        } else if (key === 'calculated_total') {
+          display = '$' + value;
+        } else {
+          display = String(value);
+        }
+        sectionHtml += row(label, display);
+      }
+    });
+
+    if (hasContent) {
+      htmlRows += section(title);
+      htmlRows += sectionHtml;
+    }
+  });
+
+  const totalRow = '<tr><td colspan="2" style="padding:14px;background:#1f2937;color:#ffffff;font-weight:600;font-size:16px;text-align:right">' +
+    'Estimated Total: $' + (form.calculated_total || '0') + '</td></tr>';
+
+  return '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#eef1f5;font-family:Inter,Arial,sans-serif">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f5;padding:30px 0"><tr><td align="center">' +
+    '<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">' +
+    '<tr><td style="padding:28px 32px 8px;background:linear-gradient(135deg,#1e3a5f,#2d5a87)">' +
+    '<h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600">New Website Request</h1>' +
+    '<p style="margin:6px 0 0;color:#b8d4f0;font-size:13px">Submitted ' + requestTime + '</p>' +
+    '</td></tr>' +
+    '<tr><td style="padding:0">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;line-height:1.5">' +
+    htmlRows +
+    totalRow +
+    '<tr><td colspan="2" style="padding:16px 24px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280">' +
+    'Sent via AM Worx Intake System - <a href="mailto:amworxx@gmail.com" style="color:#6b7280">amworxx@gmail.com</a>' +
+    '</td></tr>' +
+    '</table></td></tr>' +
+    '</table></td></tr></table>' +
+    '</body></html>';
+}
+```
 
 ### 2. Create the Apps Script project
 1. Go to https://script.google.com → **New Project**
-2. Name the project: `wp_intake_email_backend`
-3. Delete the placeholder code in `Code.gs`
-4. **Paste** the contents of `intake-email-backend.gs`
-5. **Save** (Ctrl+S / Cmd+S)
-6. **Authorize** when prompted — grant Gmail send permission
+2. Name: `wp_intake_email_backend`
+3. **Paste the entire code block above** (the complete Google Apps Script template)
+4. **Save** (Ctrl+S)
 
 ### 3. Deploy as Web App
-1. Click **Deploy** → **New deployment**
-2. Gear icon → select **Web app**
-3. Settings:
+1. Deploy → **New deployment** → Web app
+2. Settings:
    - **Description**: `AM Worx Intake Email Backend`
-   - **Execute as**: Me (your Gmail address)
+   - **Execute as**: Me (your Gmail)
    - **Who has access**: **Anyone**
-4. Click **Deploy**
-5. **Copy the Web App URL** — it looks like:
-   ```
-   https://script.google.com/macros/s/AKfycb.../exec
-   ```
+3. Click **Deploy** → Authorize Gmail permissions
+4. **Copy Web App URL** (e.g., `https://script.google.com/macros/s/AKfycbxukV12ZeIvnonSy2UmcklocL9-_9SlbYpP6arSi43ZW2dA7MZj-UgjHcaIkm0GYUp-Tw/exec`)
 
 ### 4. Test it works
-Open the Web App URL in your browser. You should see JSON:
+Visit URL → should return JSON:
 ```json
 {"status":"OK","service":"AM Worx Intake","email":"amworxx@gmail.com"}
 ```
 
 ### 5. Paste URL into `index.html`
-Open `index.html` and find this line:
 ```js
-const APPS_SCRIPT_URL = '';
-```
-Replace with your deployment URL:
-```js
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxukV12ZeIvnonSy2UmcklocL9-_9SlbYpP6arSi43ZW2dA7MZj-UgjHcaIkm0GYUp-Tw/exec';
 ```
 
-Commit, push to GitHub Pages. Done.
+Commit, push. Done.
 
 ---
 
-## Why a separate `.gs` file?
+## Client fetch configuration
+The form now POSTs to the Apps Script URL with **`text/plain`** content type. This avoids CORS preflight requests (which can hang in email clients' popup blockers) and can succeed even when the browser doesn't allow CORS reads.
 
-The Apps Script editor rejects markdown-formatted code because lines like `### 1. Open Apps Script` and `**bold text**` are not valid JavaScript. Copying directly from a markdown fence can also carry stray non-ASCII characters (em dashes, smart quotes) that some Internet connections re-encode when copy-pasting.
+If JSON is readable, great — the email sends. If CORS blocks reading, the Apps Script still sent the email, and the client displays a graceful "Submitted (status uncertain — check inbox)" message.
 
-**`docs/intake-email-backend.gs`** is a pure JavaScript file with only ASCII characters — it's safe to copy-paste in one shot.
+```javascript
+const resp = await fetch(APPS_SCRIPT_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain' },
+  body: JSON.stringify(payload)
+});
+
+// Try to read JSON response; if CORS blocks it, still treat as success
+const data = await resp.json().catch(() => ({ success: true, text_only: true }));
+```
+
+### CSS class renamed
+In the HTML, rename this class:
+
+```html
+<!-- OLD: -->
+<div class="attachment-email">
+<!-- NEW: -->
+<div class="attachment-email-status">
+```
 
 ---
 
@@ -73,7 +245,7 @@ The Apps Script editor rejects markdown-formatted code because lines like `### 1
 | Consumer Gmail daily sends | 100 emails/day |
 | Cost | $0 forever |
 
-For an intake form receiving a handful of submissions per day, this is more than enough.
+For a typical intake form, all limits are far beyond realistic usage.
 
 ## How it Works
 
@@ -89,11 +261,10 @@ MailApp.sendEmail() to amworxx@gmail.com with HTML body + attachments
 Studio sees email in Gmail with everything attached
 ```
 
-## Troubleshooting
+## Quick troubleshooting
 
 | Issue | Cause | Fix |
 |---|---|---|
-| "SyntaxError: Invalid or unexpected token line: 1" | Pasted markdown instead of clean code | Copy from `docs/intake-email-backend.gs` instead of this README's code fence |
 | 401 Unauthorized | Apps Script deployed as "Only myself" | Re-deploy with "Anyone" access |
 | 404 Not Found | Old deployment URL | Re-deploy and copy latest URL |
 | "Service invoked too many times" | Hit Gmail daily limit (100) | Resets at midnight Pacific |
