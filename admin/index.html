@@ -32,6 +32,7 @@
             DATE_FORMAT: { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' } // passed to toLocaleDateString
         };
         // Update title from config
+        // Page title will be updated dynamically by Alpine init
         document.title = CONFIG.APP_NAME + ' — Admin Dashboard';
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -133,7 +134,7 @@
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20" aria-hidden="true">
                     <i class="fas fa-shield-halved text-white text-2xl"></i>
                 </div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h2>
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100" x-text="'Welcome to ' + (settingsForm.APP_NAME || CONFIG.APP_NAME)"></h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter passcode to manage submissions.</p>
             </div>
             <div class="space-y-4">
@@ -162,7 +163,7 @@
                         <i class="fas fa-pen-ruler text-white text-xs" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-white tracking-tight" x-text="CONFIG.APP_NAME"></div>
+                        <div class="text-sm font-bold text-white tracking-tight" x-text="settingsForm.APP_NAME || CONFIG.APP_NAME"></div>
                         <div class="text-[10px] text-gray-500 font-medium">Admin Dashboard</div>
                     </div>
                 </div>
@@ -189,8 +190,17 @@
                               x-text="submissions.length"></span>
                     </a>
 
+                    <a href="#" @click.prevent="currentView='settings'"
+                       :class="currentView==='settings' ? 'sidebar-link active' : 'sidebar-link text-gray-400'"
+                       class="sidebar-link group relative">
+                        <span class="relative z-10 flex items-center gap-3">
+                            <i class="fas fa-sliders w-5 text-center text-sm" aria-hidden="true"></i> Settings
+                        </span>
+                        <span x-show="currentView==='settings'" class="absolute inset-0 rounded-lg bg-white/10"></span>
+                    </a>
+
                     <div class="pt-4 mt-4 border-t border-gray-800/50 space-y-1">
-                        <a :href="CONFIG.FORM_URL" target="_blank" class="sidebar-link text-gray-500 hover:text-gray-300" aria-label="Open intake form in new tab">
+                        <a :href="settingsForm.FORM_URL || CONFIG.FORM_URL" target="_blank" class="sidebar-link text-gray-500 hover:text-gray-300" aria-label="Open intake form in new tab">
                             <i class="fas fa-external-link w-5 text-center text-sm" aria-hidden="true"></i> View Form
                         </a>
                         <a href="#" @click.prevent="logout()" class="sidebar-link text-gray-500 hover:text-red-400">
@@ -495,6 +505,88 @@
                         </div>
                     </div>
 
+                    <!-- ── SETTINGS VIEW ── -->
+                    <div x-show="!loading && currentView === 'settings'" class="max-w-3xl">
+                        <div class="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+                                <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Dashboard Settings</h2>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Changes save to your browser — no code edits needed.</p>
+                            </div>
+                            <div class="px-6 py-5 space-y-6">
+                                <!-- App name -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Studio Name</label>
+                                    <input type="text" x-model="settingsForm.APP_NAME" class="input-field w-full" placeholder="AM Worx" />
+                                </div>
+                                <!-- Passcode -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Admin Passcode</label>
+                                    <input type="text" x-model="settingsForm.ADMIN_PASSCODE" class="input-field w-full font-mono" placeholder="amworx2026" />
+                                </div>
+                                <!-- Apps Script URL -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Apps Script URL</label>
+                                    <input type="url" x-model="settingsForm.APPS_SCRIPT_URL" class="input-field w-full font-mono text-xs" placeholder="https://script.google.com/macros/s/..." />
+                                </div>
+                                <!-- Studio Email -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Studio Email (for form submissions)</label>
+                                    <input type="email" x-model="settingsForm.STUDIO_EMAIL" class="input-field w-full" placeholder="studio@example.com" />
+                                </div>
+                                <!-- Form URL -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Intake Form URL (for sidebar link)</label>
+                                    <input type="url" x-model="settingsForm.FORM_URL" class="input-field w-full" placeholder="https://amworx.github.io/wp_intaker/" />
+                                </div>
+                                <!-- Auto refresh -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Auto-refresh (seconds)</label>
+                                        <input type="number" x-model.number="settingsForm.AUTO_REFRESH_SEC" class="input-field w-full" min="10" max="3600" />
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Toast Duration (ms)</label>
+                                        <input type="number" x-model.number="settingsForm.TOAST_DURATION_MS" class="input-field w-full" min="500" max="10000" />
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Session Expiry (hours)</label>
+                                        <input type="number" x-model.number="settingsForm.SESSION_EXPIRY_HOURS" class="input-field w-full" min="1" max="720" />
+                                    </div>
+                                </div>
+                                <!-- Date format hints -->
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Date Format</label>
+                                    <select x-model="settingsForm.DATE_STYLE" class="input-field w-full">
+                                        <option value="short">Short (Jul 17, 6:30 PM)</option>
+                                        <option value="medium">Medium (Jul 17, 2026, 6:30 PM)</option>
+                                        <option value="long">Long (July 17, 2026 at 6:30 PM)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Danger zone -->
+                                <div class="pt-4 border-t border-red-200 dark:border-red-900/50">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                        <span class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">Danger Zone</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Reset all settings to defaults (these cannot be undone).</p>
+                                    <button @click="resetSettings()" class="btn-danger text-xs px-4 py-2">Reset to Defaults</button>
+                                </div>
+                            </div>
+                            <!-- Footer -->
+                            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                <span x-show="settingsSaved" x-transition:enter="transition duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <i class="fas fa-check-circle" aria-hidden="true"></i> Saved
+                                </span>
+                                <span x-show="!settingsSaved">&nbsp;</span>
+                                <button @click="saveSettings()" class="btn-primary text-xs px-6 py-2" :disabled="saving">
+                                    <span x-show="!saving"><i class="fas fa-floppy-disk" aria-hidden="true"></i> Save Settings</span>
+                                    <span x-show="saving">Saving…</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </main>
             </div>
         </div>
@@ -634,6 +726,11 @@
             refreshInterval: null,
             nextRefresh: null,
 
+            // Settings (loaded from localStorage, fallback to CONFIG)
+            settingsForm: {},
+            settingsSaved: false,
+            saving: false,
+
             // ── Field label mapping ──
             FIELD_LABELS: [
                 'Timestamp','Full Name','Business Name','Email','Phone',
@@ -659,10 +756,13 @@
 
             // ── Computed ──
             get pageTitle() {
-                return this.currentView === 'dashboard' ? 'Dashboard' : 'Submissions';
+                if (this.currentView === 'dashboard') return 'Dashboard';
+                if (this.currentView === 'settings') return 'Settings';
+                return 'Submissions';
             },
             get subhead() {
                 if (this.currentView === 'dashboard') return 'Overview of all submissions';
+                if (this.currentView === 'settings') return 'Configure your dashboard';
                 return this.searchQuery
                     ? this.filteredSubmissions.length + ' results'
                     : this.submissions.length + ' total';
@@ -714,23 +814,28 @@
 
             // ── Init ──
             async init() {
-                const saved = sessionStorage.getItem(CONFIG.STORAGE_KEYS.AUTH);
+                // Load settings from localStorage
+                this.loadSettings();
+                document.title = (this.settingsForm.APP_NAME || CONFIG.APP_NAME) + ' — Admin Dashboard';
+
+                const saved = sessionStorage.getItem(this.settingsForm.STORAGE_AUTH);
                 if (saved === '1') {
                     this.authenticated = true;
                     await this.loadSubmissions();
                 } else {
                     this.loading = false;
                 }
-                const dm = localStorage.getItem(CONFIG.STORAGE_KEYS.DARKMODE);
+                const dm = localStorage.getItem(this.settingsForm.STORAGE_DARKMODE);
                 if (dm === 'true') { this.darkMode = true; document.documentElement.classList.add('dark'); }
                 // Auto-refresh countdown
-                this.refreshInterval = setInterval(() => { this.nextRefresh = this.nextRefresh || Date.now() + CONFIG.AUTO_REFRESH_MS; }, 1000);
-                setInterval(() => { if (this.authenticated) this.loadSubmissions(); this.nextRefresh = Date.now() + CONFIG.AUTO_REFRESH_MS; }, CONFIG.AUTO_REFRESH_MS);
+                const refreshMs = (this.settingsForm.AUTO_REFRESH_SEC || 60) * 1000;
+                this.refreshInterval = setInterval(() => { this.nextRefresh = this.nextRefresh || Date.now() + refreshMs; }, 1000);
+                setInterval(() => { if (this.authenticated) this.loadSubmissions(); this.nextRefresh = Date.now() + refreshMs; }, refreshMs);
             },
 
             login() {
-                if (this.passcode === CONFIG.ADMIN_PASSCODE) {
-                    sessionStorage.setItem(CONFIG.STORAGE_KEYS.AUTH,'1');
+                if (this.passcode === this.settingsForm.ADMIN_PASSCODE) {
+                    sessionStorage.setItem(this.settingsForm.STORAGE_AUTH,'1');
                     this.authenticated = true; this.loginError = '';
                     this.loadSubmissions();
                 } else {
@@ -738,20 +843,72 @@
                 }
             },
             logout() {
-                sessionStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
+                sessionStorage.removeItem(this.settingsForm.STORAGE_AUTH);
                 this.authenticated = false; this.submissions = []; this.detailRow = null;
             },
             toggleDark() {
                 this.darkMode = !this.darkMode;
                 document.documentElement.classList.toggle('dark');
-                localStorage.setItem(CONFIG.STORAGE_KEYS.DARKMODE, this.darkMode);
+                localStorage.setItem(this.settingsForm.STORAGE_DARKMODE, this.darkMode);
+            },
+
+            // ── Settings ──
+            loadSettings() {
+                const saved = localStorage.getItem('amworx_dashboard_settings');
+                const defaults = {
+                    APP_NAME: CONFIG.APP_NAME,
+                    ADMIN_PASSCODE: CONFIG.ADMIN_PASSCODE,
+                    APPS_SCRIPT_URL: CONFIG.APPS_SCRIPT_URL,
+                    STUDIO_EMAIL: CONFIG.APP_NAME_LONG.toLowerCase().replace(/\s+/g,'') + '@gmail.com',
+                    FORM_URL: CONFIG.FORM_URL,
+                    AUTO_REFRESH_SEC: 60,
+                    TOAST_DURATION_MS: CONFIG.TOAST_DURATION_MS,
+                    SESSION_EXPIRY_HOURS: 24,
+                    DATE_STYLE: 'short',
+                    STORAGE_AUTH: CONFIG.STORAGE_KEYS.AUTH,
+                    STORAGE_DARKMODE: CONFIG.STORAGE_KEYS.DARKMODE
+                };
+                try {
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        this.settingsForm = { ...defaults, ...parsed };
+                    } else {
+                        this.settingsForm = defaults;
+                    }
+                } catch(e) {
+                    this.settingsForm = defaults;
+                }
+            },
+            saveSettings() {
+                this.saving = true; this.settingsSaved = false;
+                try {
+                    // Ensure storage keys always use defaults
+                    this.settingsForm.STORAGE_AUTH = CONFIG.STORAGE_KEYS.AUTH;
+                    this.settingsForm.STORAGE_DARKMODE = CONFIG.STORAGE_KEYS.DARKMODE;
+                    localStorage.setItem('amworx_dashboard_settings', JSON.stringify(this.settingsForm));
+                    this.settingsSaved = true;
+                    document.title = (this.settingsForm.APP_NAME || CONFIG.APP_NAME) + ' — Admin Dashboard';
+                    setTimeout(() => { this.settingsSaved = false; }, 2000);
+                    this.showToast('Settings saved','ok');
+                } catch(e) {
+                    this.showToast('Failed to save settings','err');
+                } finally {
+                    this.saving = false;
+                }
+            },
+            resetSettings() {
+                if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+                    localStorage.removeItem('amworx_dashboard_settings');
+                    this.loadSettings();
+                    this.showToast('Settings reset to defaults','ok');
+                }
             },
 
             // ── API ──
             async loadSubmissions() {
                 this.loading = true; this.loadError = '';
                 try {
-                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=list');
+                    const resp = await fetch(this.settingsForm.APPS_SCRIPT_URL + '?action=list');
                     const text = await resp.text();
                     let data;
                     try { data = JSON.parse(text); } catch(e) { throw new Error('Invalid server response'); }
@@ -761,7 +918,7 @@
                     this.submissions = data.rows || [];
                     this.connected = true;
                     this.loading = false;
-                    this.nextRefresh = Date.now() + CONFIG.AUTO_REFRESH_MS;
+                    this.nextRefresh = Date.now() + (this.settingsForm.AUTO_REFRESH_SEC || 60) * 1000;
                 } catch (err) {
                     this.loadError = err.message; this.connected = false; this.loading = false;
                 }
@@ -769,7 +926,17 @@
 
             formatDate(ts) {
                 if (!ts) return '—';
-                try { const d = new Date(ts); if (isNaN(d.getTime())) return ts; return d.toLocaleDateString('en-US', CONFIG.DATE_FORMAT); }
+                try {
+                    const d = new Date(ts);
+                    if (isNaN(d.getTime())) return ts;
+                    const style = this.settingsForm.DATE_STYLE || 'short';
+                    const opts = style === 'long'
+                        ? { month:'long', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' }
+                        : style === 'medium'
+                        ? { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' }
+                        : { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' };
+                    return d.toLocaleDateString('en-US', opts);
+                }
                 catch(e) { return ts; }
             },
             getOriginalIndex(row) { return this.submissions.indexOf(row); },
@@ -778,7 +945,7 @@
 
             async toggleReviewed(idx) {
                 try {
-                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
+                    const resp = await fetch(this.settingsForm.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Status updated','ok'); await this.loadSubmissions(); this.closeDetail(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -786,7 +953,7 @@
             },
             async quickToggle(idx) {
                 try {
-                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
+                    const resp = await fetch(this.settingsForm.APPS_SCRIPT_URL + '?action=reviewed&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Status updated','ok'); await this.loadSubmissions(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -796,7 +963,7 @@
             async doDelete() {
                 const idx = this.deleteTarget; this.deleteTarget = null;
                 try {
-                    const resp = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=delete&index=' + idx);
+                    const resp = await fetch(this.settingsForm.APPS_SCRIPT_URL + '?action=delete&index=' + idx);
                     const data = await resp.json();
                     if (data.success) { this.showToast('Deleted','ok'); await this.loadSubmissions(); this.closeDetail(); }
                     else { this.showToast('Failed: ' + (data.error||'unknown'),'err'); }
@@ -806,7 +973,7 @@
             showToast(msg, type) {
                 if (this.toastTimer) clearTimeout(this.toastTimer);
                 this.toast = { show: true, message: msg, type: type||'' };
-                this.toastTimer = setTimeout(() => { this.toast.show = false; }, CONFIG.TOAST_DURATION_MS);
+                this.toastTimer = setTimeout(() => { this.toast.show = false; }, this.settingsForm.TOAST_DURATION_MS || CONFIG.TOAST_DURATION_MS);
             }
         };
     }
