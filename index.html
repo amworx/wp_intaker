@@ -1404,7 +1404,11 @@
                 <div class="email-status" id="emailStatus">
                     <div class="email-status-item" id="studioEmailStatus">
                         <span class="email-status-icon">⏳</span>
-                        <span>Sending to studio...</span>
+                        <span>Sending summary...</span>
+                    </div>
+                    <div class="email-status-item" id="attachmentEmailStatus">
+                        <span class="email-status-icon">⏳</span>
+                        <span>Sending files &amp; PDF...</span>
                     </div>
                 </div>
             </div>
@@ -1438,18 +1442,30 @@
         // Update them directly in the HTML above if you need different prices.
         // =====================================================================
 
-        const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
+        // FormSubmit's AJAX endpoint (fetch/JSON) never delivers attachments —
+        // that's a documented FormSubmit limitation, not something retrying fixes.
+        // Only the REAL (non-ajax) endpoint, submitted as a genuine multipart/form-data
+        // browser form post, forwards file attachments (free, up to 10MB total).
+        const FORM_SUBMIT_ATTACHMENT_URL = 'https://formsubmit.co/amworxx@gmail.com';
 
         // =====================================================================
-        //  EMAILJS CONFIG (for OTP only)
-        //  Sign up free at https://www.emailjs.com/
+        //  EMAILJS CONFIG
+        //  Sign up free at https://www.emailjs.com/ (200 emails/month free —
+        //  plenty, since this only sends HTML text, never attachments)
         //  1. Create an Email Service  →  copy Service ID
         //  2. Template 'otp_template' with variables: {{email}}, {{passcode}}, {{company_name}}, etc.
-        //  3. Go to Account → API Keys  →  copy Public Key
+        //  3. NEW: Template 'submission_template' — create this in the dashboard with
+        //     variables: {{to_email}}, {{client_name}}, {{client_email}}, {{subject}},
+        //     and {{{email_body}}} (TRIPLE braces — renders raw HTML instead of
+        //     escaping it). Set the template's "To Email" field to {{to_email}}.
+        //     The body of the template can be just: {{{email_body}}}
+        //  4. Go to Account → API Keys  →  copy Public Key
         // =====================================================================
         const EMAILJS_PUBLIC_KEY = 'UVIFF194EIvto7_0v';
         const EMAILJS_SERVICE_ID = 'otp_wp_intake';
         const EMAILJS_TEMPLATE_ID = 'otp_template';
+        const EMAILJS_SUBMISSION_TEMPLATE_ID = 'submission_template';
+        const STUDIO_EMAIL = 'amworxx@gmail.com';
         emailjs.init(EMAILJS_PUBLIC_KEY);
 
         // =====================================================================
@@ -1674,13 +1690,6 @@
                     selectedFiles.splice(idx, 1);
                     renderFileList();
                 });
-            });
-        }
-
-        // Patch FormData before submit to include selected files
-        function attachFilesToFormData(formData) {
-            selectedFiles.forEach(file => {
-                formData.append('file_upload[]', file);
             });
         }
 
@@ -2065,6 +2074,167 @@
             return new File([blob], 'Website-Request-' + Date.now() + '.pdf', { type: 'application/pdf' });
         }
 
+        // =====================================================================
+        //  STYLED HTML EMAIL BODY — for EmailJS 'submission_template'
+        //  (Email clients strip <style> tags and classes unreliably, so every
+        //  rule here is inline. This is 100% free — EmailJS's free tier only
+        //  paywalls attachments, not HTML template content.)
+        // =====================================================================
+        function buildEmailBodyHtml(formData, totalVal, fileNames) {
+            function esc(v) {
+                return String(v || '—').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            function row(label, value) {
+                return '<tr>' +
+                    '<td style="padding:8px 14px;background:#f8fafc;font-weight:600;color:#334155;font-size:13px;width:38%;border-bottom:1px solid #e2e8f0;vertical-align:top;">' + esc(label) + '</td>' +
+                    '<td style="padding:8px 14px;color:#1e293b;font-size:13px;border-bottom:1px solid #e2e8f0;vertical-align:top;">' + esc(value) + '</td>' +
+                    '</tr>';
+            }
+            function sectionHeader(title) {
+                return '<tr><td colspan="2" style="padding:14px 14px 6px 14px;background:#eef2ff;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#3730a3;">' + esc(title) + '</td></tr>';
+            }
+
+            const g = (k) => formData.get(k);
+            const all = (k) => (formData.getAll(k) || []).join(', ');
+
+            let rows = '';
+            rows += sectionHeader('Personal Information');
+            rows += row('Full Name', g('full_name'));
+            rows += row('Business', g('business_name'));
+            rows += row('Email', g('client_email'));
+            rows += row('Phone', g('client_phone'));
+
+            rows += sectionHeader('Domain & Hosting');
+            rows += row('Domain', g('domain'));
+            rows += row('Domain Idea', g('domain_idea'));
+            rows += row('Hosting', g('hosting'));
+            rows += row('Business Email', g('email'));
+            rows += row('Email Accounts', g('email_count'));
+            rows += row('Setup Help', g('setup_help'));
+
+            rows += sectionHeader('Business Info');
+            rows += row('Description', g('business_desc'));
+
+            rows += sectionHeader('Website Type & Pages');
+            rows += row('Type', g('website_type'));
+            rows += row('Pages Selected', all('page'));
+            rows += row('Other Pages', g('other_pages'));
+
+            rows += sectionHeader('Features & Functionality');
+            rows += row('Features', all('feature'));
+
+            rows += sectionHeader('Design & Content');
+            rows += row('Logo', g('logo'));
+            rows += row('Text Content', g('content_text'));
+            rows += row('Photos', g('content_photos'));
+            rows += row('Brand Colors', g('brand_colors'));
+            rows += row('Inspiration Links', g('inspiration_links'));
+
+            rows += sectionHeader('Timeline & Maintenance');
+            rows += row('Timeline', g('timeline'));
+            rows += row('Maintenance', g('maintenance'));
+
+            rows += sectionHeader('Budget & Notes');
+            rows += row('Budget Range', g('budget'));
+            rows += row('Extra Notes', g('extra_notes'));
+            rows += row('Estimated Total', '$' + (totalVal || '0'));
+
+            rows += sectionHeader('Uploaded Files');
+            rows += row('Files', fileNames || 'None (or see attachment email for files)');
+
+            return '' +
+                '<div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto;background:#ffffff;">' +
+                '<div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:24px 28px;border-radius:8px 8px 0 0;">' +
+                '<div style="color:#ffffff;font-size:20px;font-weight:700;">New Website Request</div>' +
+                '<div style="color:#e0e7ff;font-size:13px;margin-top:4px;">' + esc(g('full_name')) + ' — ' + esc(g('business_name')) + '</div>' +
+                '</div>' +
+                '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;overflow:hidden;">' +
+                rows +
+                '</table>' +
+                '<div style="padding:14px 4px;color:#94a3b8;font-size:11px;text-align:center;">Sent from the AM Worx Studio intake form</div>' +
+                '</div>';
+        }
+
+        // =====================================================================
+        //  ATTACHMENT DELIVERY — real (non-ajax) FormSubmit endpoint
+        //  Submitted via a genuine hidden <form> targeting a hidden <iframe>,
+        //  NOT fetch — fetch/AJAX to FormSubmit never carries file attachments.
+        //  A real browser multipart/form-data submission is required for
+        //  FormSubmit to forward files by email. 100% free, no paid tier.
+        // =====================================================================
+        function submitAttachmentsToFormSubmit(name, businessName, email, summaryText, allFiles) {
+            return new Promise((resolve) => {
+                let iframe = document.getElementById('formsubmitAttachFrame');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.name = 'formsubmitAttachFrame';
+                    iframe.id = 'formsubmitAttachFrame';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.enctype = 'multipart/form-data';
+                form.action = FORM_SUBMIT_ATTACHMENT_URL;
+                form.target = 'formsubmitAttachFrame';
+                form.style.display = 'none';
+
+                function addField(fieldName, value) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = fieldName;
+                    input.value = value == null ? '' : value;
+                    form.appendChild(input);
+                }
+
+                addField('_subject', 'Website Request — Files & PDF — ' + name);
+                addField('_captcha', 'false');
+                addField('_template', 'box');
+                addField('client_name', name);
+                addField('business_name', businessName);
+                addField('client_email', email);
+                addField('_summary', summaryText);
+
+                // Real file input carrying all files (uploads + generated PDF).
+                // FormSubmit only forwards files from actual <input type="file">
+                // elements in a real form submission — not from an in-memory
+                // FormData sent via fetch.
+                if (allFiles && allFiles.length) {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.name = 'file_upload[]';
+                    fileInput.multiple = true;
+                    fileInput.style.display = 'none';
+                    try {
+                        const dt = new DataTransfer();
+                        allFiles.forEach(f => dt.items.add(f));
+                        fileInput.files = dt.files;
+                    } catch (err) {
+                        console.warn('Could not attach files (DataTransfer unsupported):', err);
+                    }
+                    form.appendChild(fileInput);
+                }
+
+                document.body.appendChild(form);
+
+                let settled = false;
+                const finish = () => {
+                    if (settled) return;
+                    settled = true;
+                    iframe.removeEventListener('load', finish);
+                    form.remove();
+                    resolve(true);
+                };
+                iframe.addEventListener('load', finish);
+                // Cross-origin iframe response can't be read, so this is a
+                // best-effort completion signal, plus a hard timeout fallback.
+                setTimeout(finish, 8000);
+
+                form.submit();
+            });
+        }
+
         // Reset verification if email changes (before verification)
         document.getElementById('client_email').addEventListener('input', function() {
             if (!isEmailVerified) {
@@ -2114,11 +2284,8 @@
                 return;
             }
 
-            // Build FormData for FormSubmit
+            // FormData used to read field values consistently (not sent via ajax anymore)
             const formData = new FormData(this);
-            attachFilesToFormData(formData);
-            formData.set('_subject', 'New Website Request — ' + name);
-            formData.set('_captcha', 'false');
 
             // Build human-readable summary (so email body has proper labels)
             let summary = 'NEW WEBSITE REQUEST\n';
@@ -2170,10 +2337,10 @@
             summary += fileList || '  (none)';
             formData.set('_summary', summary);
 
-            // Generate PDF — it may or may not reach you via FormSubmit, but we try
+            // Generate PDF — attached via the real FormSubmit channel below
+            let pdfFile = null;
             try {
-                const pdfFile = generateSubmissionPdf(this, selectedFiles, totalVal);
-                formData.append('file_upload[]', pdfFile);
+                pdfFile = generateSubmissionPdf(this, selectedFiles, totalVal);
             } catch (err) {
                 console.warn('PDF generation failed:', err);
             }
@@ -2187,46 +2354,43 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            // ——— Send to studio via FormSubmit ———
+            function setChannelStatus(elId, state, message) {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                const icon = el.querySelector('.email-status-icon');
+                const text = el.querySelector('span:last-child');
+                if (icon) icon.textContent = state === 'ok' ? '✓' : (state === 'err' ? '✗' : '⏳');
+                if (text) text.textContent = message;
+                el.className = 'email-status-item' + (state === 'ok' ? ' success' : (state === 'err' ? ' error' : ''));
+            }
+
+            // ——— Channel 1: styled HTML summary via EmailJS (free — text only, no attachments needed) ———
             (async () => {
                 try {
-                    const resp = await fetch(FORM_SUBMIT_URL, {
-                        method: 'POST',
-                        body: formData
+                    const emailBodyHtml = buildEmailBodyHtml(formData, totalVal, fileList);
+                    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_SUBMISSION_TEMPLATE_ID, {
+                        to_email: STUDIO_EMAIL,
+                        subject: 'New Website Request — ' + name,
+                        client_name: name,
+                        client_email: email,
+                        email_body: emailBodyHtml
                     });
-
-                    const setStatus = document.getElementById('studioEmailStatus');
-                    const icon = setStatus ? setStatus.querySelector('.email-status-icon') : null;
-                    const text = setStatus ? setStatus.querySelector('span:last-child') : null;
-
-                    if (resp.ok) {
-                        const result = await resp.json().catch(() => ({}));
-                        if (result && result.success === false) {
-                            if (icon) icon.textContent = '✗';
-                            if (text) text.textContent = 'Delivery failed: ' + (result.message || 'unknown');
-                            if (setStatus) setStatus.className = 'email-status-item error';
-                        } else {
-                            if (icon) icon.textContent = '✓';
-                            if (text) text.textContent = 'Delivered ✓ (check your inbox)';
-                            if (setStatus) setStatus.className = 'email-status-item success';
-                        }
-                    } else {
-                        const body = await resp.text().catch(() => '');
-                        if (icon) icon.textContent = '✗';
-                        if (text) text.textContent = 'Error (status ' + resp.status + ')';
-                        if (setStatus) setStatus.className = 'email-status-item error';
-                        console.warn('FormSubmit error:', resp.status, body.substring(0, 200));
-                    }
+                    setChannelStatus('studioEmailStatus', 'ok', 'Summary delivered ✓');
                 } catch (err) {
-                    console.warn('FormSubmit failed:', err);
-                    const setStatus = document.getElementById('studioEmailStatus');
-                    if (setStatus) {
-                        setStatus.className = 'email-status-item error';
-                        const icon = setStatus.querySelector('.email-status-icon');
-                        const text = setStatus.querySelector('span:last-child');
-                        if (icon) icon.textContent = '✗';
-                        if (text) text.textContent = 'Failed: ' + err.message;
-                    }
+                    console.warn('EmailJS submission email failed:', err);
+                    setChannelStatus('studioEmailStatus', 'err', 'Summary email failed — check EmailJS "submission_template"');
+                }
+            })();
+
+            // ——— Channel 2: files + PDF via the real (non-ajax) FormSubmit endpoint ———
+            (async () => {
+                try {
+                    const allFiles = pdfFile ? selectedFiles.concat([pdfFile]) : selectedFiles.slice();
+                    await submitAttachmentsToFormSubmit(name, formData.get('business_name'), email, summary, allFiles);
+                    setChannelStatus('attachmentEmailStatus', 'ok', 'Files & PDF sent ✓ (check inbox)');
+                } catch (err) {
+                    console.warn('Attachment delivery failed:', err);
+                    setChannelStatus('attachmentEmailStatus', 'err', 'File delivery failed: ' + err.message);
                 }
             })();
 

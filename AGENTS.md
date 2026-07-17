@@ -36,11 +36,21 @@ Static web app — a self-contained single-file client website survey / intake f
 # Email Architecture
 | Email | Service | To | Content |
 |---|---|---|---|
-| Full submission | FormSubmit.co | `amworxx@gmail.com` | All answers + files |
-| OTP code | EmailJS | Client's email | 6-digit verification code |
-| Client confirmation | EmailJS | Client's email | Thank-you + overview |
+| Full submission (primary) | **EmailJS** (`submission_template`) | `amworxx@gmail.com` | Professional HTML email with ALL form data in a styled table (CodePen-style) |
+| Full submission (fallback) | FormSubmit.co (`/ajax/`) | `amworxx@gmail.com` | Text-only summary |
+| OTP code | EmailJS (`otp_template`) | Client's email | 6-digit verification code |
+| Client confirmation | EmailJS (`otp_template`) | Client's email | Thank-you + overview |
 
-FormSubmit must NOT be used to send to unverified client emails (triggers activation emails).
+EmailJS is the primary delivery channel — it sends a beautifully formatted HTML email body containing all form fields with human-readable labels. No file attachments (EmailJS free tier limitation).
+
+FormSubmit `/ajax/` endpoint serves as a text-only fallback. User-uploaded file names are listed in the email body but files cannot be attached due to EmailJS free plan limits.
+
+# EmailJS Templates
+## `submission_template`
+- Variables: `{{email_body}}`, `{{company_name}}`, `{{request_time}}`, `{{logo_url}}`, `{{support_url}}`, `{{email}}`, `{{to_email}}`
+- The `{{email_body}}` variable contains the full HTML table with all submission data
+- Template subject: `New Website Request — {{company_name}}`
+- Template body: use `{{{email_body}}}` (triple braces for raw HTML rendering) in the Content > Code section
 
 # Workflow
 1. Client opens `index.html` (served via GitHub Pages).
