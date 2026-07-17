@@ -8,8 +8,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>" />
     <title>AM Worx — Admin Dashboard</title>
     <script>
-        // Apply dark mode before paint to prevent flash
-        (function(){try{if(localStorage.getItem('amworx_darkmode')==='true')document.documentElement.classList.add('dark')}catch(e){}})();
+        // Apply dark mode before paint (only if user previously toggled it)
+        (function(){try{if(localStorage.getItem('amworx_toggled_dark')==='1'&&localStorage.getItem('amworx_darkmode')==='true')document.documentElement.classList.add('dark')}catch(e){}})();
     </script>
     <script>
         // =====================================================================
@@ -36,6 +36,12 @@
         document.title = CONFIG.APP_NAME + ' — Admin Dashboard';
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Default to light mode — dark only activates when user toggles it
+        tailwind.config = { darkMode: 'class' };
+        // If user never explicitly toggled dark mode, ensure clean light state
+        try { if (!localStorage.getItem('amworx_toggled_dark')) localStorage.removeItem('amworx_darkmode'); } catch(e) {}
+    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://cdn.tailwindcss.com" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -209,7 +215,35 @@
         /* ── Focus ── */
         *:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 4px; }
 
-        /* ── Touch ── */
+        /* ===================================================================
+           COMPREHENSIVE DARK MODE — overrides everything
+           =================================================================== */
+        .dark, .dark * { color-scheme: dark; }
+        .dark body { background-color: #030712; }
+        .dark .bg-white { background-color: #1f2937 !important; }
+        .dark .bg-gray-50 { background-color: #111827 !important; }
+        .dark .text-gray-900 { color: #f3f4f6 !important; }
+        .dark .text-gray-700 { color: #d1d5db !important; }
+        .dark .text-gray-600 { color: #9ca3af !important; }
+        .dark .text-gray-500 { color: #9ca3af !important; }
+        .dark .text-gray-400 { color: #6b7280 !important; }
+        .dark .border-gray-200 { border-color: #374151 !important; }
+        .dark .border-gray-100 { border-color: #1f2937 !important; }
+        .dark .hover\:bg-gray-100:hover { background-color: #374151 !important; }
+
+        /* Stats cards & table containers */
+        .dark .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important; }
+        .dark .shadow-lg { box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
+
+        /* Override for elements that should stay white in dark mode */
+        .dark .bg-white\/80 { background-color: rgba(31,41,55,0.8) !important; }
+        .dark .bg-white\/90 { background-color: rgba(31,41,55,0.9) !important; }
+        .dark .bg-white\/95 { background-color: rgba(31,41,55,0.95) !important; }
+        .dark .divide-gray-50 > * + * { border-color: #1f2937 !important; }
+        .dark .divide-gray-100 > * + * { border-color: #1f2937 !important; }
+
+        /* Table header in dark mode */
+        .dark thead tr.bg-gray-50 { background-color: rgba(17,24,39,0.8) !important; }
         * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
         /* ── Balance headings ── */
@@ -231,7 +265,7 @@
     <div x-show="!authenticated"
          x-transition:enter="transition duration-300"
          class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-gray-900 p-4 z-50">
-        <div class="w-full max-w-sm bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-gray-700/50 p-8 fade-up">
+        <div class="w-full max-w-sm mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-gray-700/50 p-8 fade-up">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20" aria-hidden="true">
                     <i class="fas fa-shield-halved text-white text-2xl"></i>
@@ -372,7 +406,7 @@
                 <main class="flex-1 overflow-y-auto p-4 lg:p-6 scroll-smooth">
 
                     <!-- ── SKELETON LOADING ── -->
-                    <div x-show="loading" class="space-y-5 max-w-5xl">
+                    <div x-show="loading" class="space-y-5 w-full">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <template x-for="i in 4" :key="i">
                                 <div class="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
@@ -405,7 +439,7 @@
                     </div>
 
                     <!-- ── ERROR ── -->
-                    <div x-show="loadError && !loading" class="max-w-lg mx-auto mt-8 fade-up" role="alert">
+                    <div x-show="loadError && !loading" class="w-full max-w-md mx-auto mt-8 fade-up" role="alert">
                         <div class="bg-white dark:bg-gray-800/50 rounded-2xl border border-red-200 dark:border-red-900/50 p-8 text-center shadow-lg">
                             <div class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                                 <i class="fas fa-wifi-slash text-2xl text-red-500" aria-hidden="true"></i>
@@ -419,7 +453,7 @@
                     </div>
 
                     <!-- ── DASHBOARD VIEW ── -->
-                    <div x-show="!loading && !loadError && currentView === 'dashboard'" class="max-w-6xl">
+                    <div x-show="!loading && !loadError && currentView === 'dashboard'" class="w-full">
                         <!-- Stats grid -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div class="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-900 transition-all duration-200 group fade-up fade-up-1">
@@ -521,7 +555,7 @@
                     </div>
 
                     <!-- ── SUBMISSIONS VIEW ── -->
-                    <div x-show="!loading && !loadError && currentView === 'submissions'" class="max-w-6xl">
+                    <div x-show="!loading && !loadError && currentView === 'submissions'" class="w-full">
                         <!-- Toolbar -->
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                             <div class="relative flex-1 max-w-md w-full group">
@@ -608,7 +642,7 @@
                     </div>
 
                     <!-- ── SETTINGS VIEW ── -->
-                    <div x-show="!loading && currentView === 'settings'" class="max-w-3xl">
+                    <div x-show="!loading && currentView === 'settings'" class="w-full max-w-4xl">
                         <div class="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
                             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
                                 <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Dashboard Settings</h2>
@@ -1078,7 +1112,9 @@
                     this.loading = false;
                 }
                 const dm = localStorage.getItem(this.settingsForm.STORAGE_DARKMODE);
-                if (dm === 'true') { this.darkMode = true; document.documentElement.classList.add('dark'); }
+                const toggled = localStorage.getItem('amworx_toggled_dark');
+                if (dm === 'true' && toggled === '1') { this.darkMode = true; document.documentElement.classList.add('dark'); }
+                else { this.darkMode = false; document.documentElement.classList.remove('dark'); }
                 // Auto-refresh countdown
                 const refreshMs = (this.settingsForm.AUTO_REFRESH_SEC || 60) * 1000;
                 this.refreshInterval = setInterval(() => { this.nextRefresh = this.nextRefresh || Date.now() + refreshMs; }, 1000);
@@ -1102,6 +1138,7 @@
                 this.darkMode = !this.darkMode;
                 document.documentElement.classList.toggle('dark');
                 localStorage.setItem(this.settingsForm.STORAGE_DARKMODE, this.darkMode);
+                localStorage.setItem('amworx_toggled_dark', '1');
             },
 
             // ── Settings ──
