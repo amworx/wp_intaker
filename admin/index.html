@@ -172,17 +172,30 @@
 
         /* ── Component: Sidebar links ── */
         .sidebar-link {
-            display: flex; align-items: center; gap: 0.75rem;
+            display: flex; align-items: center; gap: 0.625rem;
             padding: 0.5rem 0.75rem;
             border-radius: 0.625rem;
             font-size: 0.8125rem; font-weight: 500;
             text-decoration: none;
             transition: all 0.15s;
             position: relative;
+            cursor: pointer;
         }
-        .sidebar-link.active { color: #fff; background: rgba(255,255,255,0.08); }
-        .sidebar-link.text-gray-400 { color: #9ca3af; }
-        .sidebar-link:hover:not(.active) { color: #e5e7eb; background: rgba(255,255,255,0.04); }
+        .sidebar-link.active {
+            color: #fff !important;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 2px 8px rgba(59,130,246,0.25);
+        }
+        .sidebar-link:hover:not(.active) { background: #f3f4f6; }
+        .dark .sidebar-link:hover:not(.active) { background: rgba(255,255,255,0.06); }
+        /* Active left accent bar */
+        .sidebar-active-indicator {
+            position: absolute; left: -0.75rem; top: 50%; transform: translateY(-50%);
+            width: 3px; height: 1.25rem;
+            background: #3b82f6;
+            border-radius: 0 3px 3px 0;
+        }
+        .dark .sidebar-active-indicator { background: #60a5fa; }
 
         /* ── Component: Badges ── */
         .badge-reviewed {
@@ -292,62 +305,56 @@
 
             <!-- ====== SIDEBAR ====== -->
             <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                   class="fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-gray-900 to-gray-950 dark:from-gray-950 dark:to-black border-r border-gray-800/50 transition-all duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto flex flex-col shadow-2xl lg:shadow-none">
+                   class="fixed inset-y-0 left-0 z-40 w-64 transition-all duration-300 ease-out lg:translate-x-0 lg:static lg:z-auto flex flex-col shadow-2xl lg:shadow-none bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
                 <!-- Logo -->
-                <div class="flex items-center gap-3 px-5 h-16 border-b border-gray-800/50">
+                <div class="flex items-center gap-3 px-5 h-16 border-b border-gray-200 dark:border-gray-800">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
                         <i class="fas fa-pen-ruler text-white text-xs" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <div class="text-sm font-bold text-white tracking-tight" x-text="settingsForm.APP_NAME || CONFIG.APP_NAME"></div>
-                        <div class="text-[10px] text-gray-500 font-medium">Admin Dashboard</div>
+                        <div class="text-sm font-bold text-gray-900 dark:text-white tracking-tight" x-text="settingsForm.APP_NAME || CONFIG.APP_NAME"></div>
+                        <div class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Admin Dashboard</div>
                     </div>
                 </div>
 
                 <!-- Nav -->
                 <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Main navigation">
                     <a href="#" @click.prevent="currentView='dashboard'"
-                       :class="currentView==='dashboard' ? 'sidebar-link active' : 'sidebar-link text-gray-400'"
-                       class="sidebar-link group relative">
-                        <span class="relative z-10 flex items-center gap-3">
-                            <i class="fas fa-grid-2 w-5 text-center text-sm" aria-hidden="true"></i> Dashboard
-                        </span>
-                        <span x-show="currentView==='dashboard'" class="absolute inset-0 rounded-lg bg-white/10"></span>
+                       :class="currentView==='dashboard' ? 'sidebar-link active' : 'sidebar-link text-gray-600 dark:text-gray-400'"
+                       class="sidebar-link">
+                        <i class="fas fa-grid-2 w-5 text-center text-sm" aria-hidden="true"></i> Dashboard
+                        <span x-show="currentView==='dashboard'" class="sidebar-active-indicator"></span>
                     </a>
                     <a href="#" @click.prevent="currentView='submissions'"
-                       :class="currentView==='submissions' ? 'sidebar-link active' : 'sidebar-link text-gray-400'"
-                       class="sidebar-link group relative">
-                        <span class="relative z-10 flex items-center gap-3">
-                            <i class="fas fa-list-check w-5 text-center text-sm" aria-hidden="true"></i> Submissions
-                        </span>
-                        <span x-show="currentView==='submissions'" class="absolute inset-0 rounded-lg bg-white/10"></span>
+                       :class="currentView==='submissions' ? 'sidebar-link active' : 'sidebar-link text-gray-600 dark:text-gray-400'"
+                       class="sidebar-link">
+                        <i class="fas fa-list-check w-5 text-center text-sm" aria-hidden="true"></i> Submissions
+                        <span x-show="currentView==='submissions'" class="sidebar-active-indicator"></span>
                         <span x-show="submissions.length > 0"
-                              class="relative z-10 ml-auto bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-sm"
+                              class="ml-auto bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-sm"
                               x-text="submissions.length"></span>
                     </a>
 
                     <a href="#" @click.prevent="currentView='settings'"
-                       :class="currentView==='settings' ? 'sidebar-link active' : 'sidebar-link text-gray-400'"
-                       class="sidebar-link group relative">
-                        <span class="relative z-10 flex items-center gap-3">
-                            <i class="fas fa-sliders w-5 text-center text-sm" aria-hidden="true"></i> Settings
-                        </span>
-                        <span x-show="currentView==='settings'" class="absolute inset-0 rounded-lg bg-white/10"></span>
+                       :class="currentView==='settings' ? 'sidebar-link active' : 'sidebar-link text-gray-600 dark:text-gray-400'"
+                       class="sidebar-link">
+                        <i class="fas fa-sliders w-5 text-center text-sm" aria-hidden="true"></i> Settings
+                        <span x-show="currentView==='settings'" class="sidebar-active-indicator"></span>
                     </a>
 
-                    <div class="pt-4 mt-4 border-t border-gray-800/50 space-y-1">
-                        <a :href="settingsForm.FORM_URL || CONFIG.FORM_URL" target="_blank" class="sidebar-link text-gray-500 hover:text-gray-300" aria-label="Open intake form in new tab">
+                    <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800 space-y-1">
+                        <a :href="settingsForm.FORM_URL || CONFIG.FORM_URL" target="_blank" class="sidebar-link text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" aria-label="Open intake form in new tab">
                             <i class="fas fa-external-link w-5 text-center text-sm" aria-hidden="true"></i> View Form
                         </a>
-                        <a href="#" @click.prevent="logout()" class="sidebar-link text-gray-500 hover:text-red-400">
+                        <a href="#" @click.prevent="logout()" class="sidebar-link text-gray-500 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400">
                             <i class="fas fa-right-from-bracket w-5 text-center text-sm" aria-hidden="true"></i> Log Out
                         </a>
                     </div>
                 </nav>
 
                 <!-- Bottom status -->
-                <div class="px-4 py-3 border-t border-gray-800/50">
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <span class="w-1.5 h-1.5 rounded-full" :class="connected ? 'bg-emerald-500' : 'bg-red-500'"></span>
                         <span x-text="connected ? 'Connected' : 'Disconnected'"></span>
                         <span class="ml-auto" x-text="autoRefreshLabel"></span>
