@@ -1438,7 +1438,7 @@
         // Update them directly in the HTML above if you need different prices.
         // =====================================================================
 
-        const FORM_SUBMIT_URL = 'https://formsubmit.co/amworxx@gmail.com';
+        const FORM_SUBMIT_URL = 'https://formsubmit.co/ajax/amworxx@gmail.com';
 
         // =====================================================================
         //  EMAILJS CONFIG (for OTP only)
@@ -2119,7 +2119,6 @@
             attachFilesToFormData(formData);
             formData.set('_subject', 'New Website Request — ' + name);
             formData.set('_captcha', 'false');
-            formData.set('_ajax', 'true');
 
             // Build human-readable summary (so email body has proper labels)
             let summary = 'NEW WEBSITE REQUEST\n';
