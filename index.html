@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#030712" media="(prefers-color-scheme: dark)" />
     <title>Website Request Form</title>
+    <script>
+        // Apply dark mode before paint (only if user previously toggled it)
+        (function(){try{if(localStorage.getItem('amworx_toggled_dark')==='1'&&localStorage.getItem('amworx_darkmode')==='true')document.documentElement.classList.add('dark')}catch(e){}})();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -351,15 +357,19 @@
         .modal-close {
             margin-top: 20px;
             padding: 10px 24px;
-            background: #1a1a2e;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
             color: #fff;
             border: none;
-            border-radius: 8px;
+            border-radius: 0.75rem;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
+            font-family: inherit;
+            transition: all 0.15s;
         }
+        .modal-close:hover { background: linear-gradient(135deg, #1d4ed8, #4338ca); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .modal-close:active { transform: scale(0.97); }
         /* ===== SUBMIT ===== */
         .submit-section {
             margin-top: 32px;
@@ -368,6 +378,7 @@
             text-align: center;
         }
         .btn-submit {
+            display: inline-flex; align-items: center; gap: 0.5rem;
             padding: 14px 48px;
             background: #0f766e;
             color: #fff;
@@ -381,13 +392,16 @@
         }
         .btn-submit:hover {
             background: #0d6d5e;
+            box-shadow: 0 4px 12px rgba(15,118,110,0.3);
         }
         .btn-submit:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
         .btn-submit:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .form-footer-note {
             margin-top: 12px;
@@ -634,14 +648,17 @@
             letter-spacing: 8px;
             text-align: center;
             border: 2px solid #dce1e8;
-            border-radius: 8px;
+            border-radius: 0.75rem;
             font-family: 'Courier New', monospace;
-            transition: border-color 0.2s;
+            background: #fff;
+            color: #111827;
+            transition: border-color 0.2s, box-shadow 0.15s;
+            outline: none;
         }
         .otp-input:focus {
             border-color: #2563eb;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
         .otp-input.verified {
             border-color: #166534;
@@ -713,6 +730,147 @@
             color: #94a3b8;
             cursor: not-allowed;
         }
+
+        /* ===================================================================
+           COMPONENT CLASSES (shared with admin dashboard)
+           =================================================================== */
+        .input-field {
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background: #fff;
+            color: #111827;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+            width: 100%;
+            font-family: inherit;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .input-field::placeholder { color: #9ca3af; }
+
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            font-size: 0.8125rem; font-weight: 600;
+            border: none; border-radius: 0.75rem;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #4338ca); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: #fff;
+            color: #374151;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid #e5e7eb; border-radius: 0.75rem;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-secondary:hover { background: #f9fafb; border-color: #d1d5db; }
+
+        .btn-danger {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: #fff;
+            color: #dc2626;
+            font-size: 0.8125rem; font-weight: 500;
+            border: 1px solid #fca5a5; border-radius: 0.75rem;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+
+        /* ===================================================================
+           COMPREHENSIVE DARK MODE
+           =================================================================== */
+        .dark, .dark * { color-scheme: dark; }
+        .dark body { background: #030712; color: #e5e7eb; }
+        .dark .form-body { background: #1f2937; border-color: #374151; }
+        .dark .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .dark .price-bar { background: #1f2937; border-color: #374151; }
+        .dark .price-bar .label { color: #9ca3af; }
+        .dark .price-bar .total { color: #34d399; }
+        .dark .price-bar .badge { background: rgba(52,211,153,0.15); color: #6ee7b7; }
+        .dark .section { border-color: #374151; }
+        .dark .section-title { color: #f3f4f6; }
+        .dark .section-desc { color: #9ca3af; }
+        .dark .section-number { background: #374151; color: #f3f4f6; }
+        .dark label { color: #d1d5db; }
+        .dark .sub-label { color: #9ca3af; }
+        .dark .option-card { background: #1f2937; border-color: #374151; }
+        .dark .option-card:hover { background: #374151; border-color: #6b7280; }
+        .dark .option-card.selected { background: rgba(37,99,235,0.1); border-color: #3b82f6; }
+        .dark .option-card .opt-title { color: #f3f4f6; }
+        .dark .option-card .opt-price { color: #34d399; }
+        .dark .option-card .opt-desc { color: #9ca3af; }
+        .dark .inline-options label { background: #1f2937; border-color: #374151; }
+        .dark .inline-options label:hover { border-color: #6b7280; }
+        .dark .inline-options label:has(input:checked) { border-color: #3b82f6; background: rgba(37,99,235,0.1); }
+        .dark .inline-options .price-tag { color: #34d399; }
+        .dark .sub-options { background: rgba(31,41,55,0.5); border-color: #374151; }
+        .dark .sub-options label { color: #d1d5db; }
+        .dark .input-field, .dark input[type="text"], .dark input[type="email"], .dark input[type="tel"], .dark input[type="number"], .dark textarea, .dark select {
+            background: #1f2937; border-color: #374151; color: #f3f4f6;
+        }
+        .dark .input-field:focus, .dark input:focus, .dark textarea:focus, .dark select:focus {
+            border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+        }
+        .dark .file-upload-label { background: rgba(31,41,55,0.5); border-color: #374151; }
+        .dark .file-upload-label:hover { background: rgba(37,99,235,0.1); border-color: #3b82f6; }
+        .dark .file-upload-text { color: #f3f4f6; }
+        .dark .file-upload-hint { color: #9ca3af; }
+        .dark .file-list { color: #9ca3af; }
+        .dark .file-list .file-item .remove-file:hover { color: #ef4444; }
+        .dark .otp-section { background: rgba(31,41,55,0.5); border-color: #374151; }
+        .dark .otp-input { background: #1f2937; border-color: #374151; color: #f3f4f6; }
+        .dark .otp-input:focus { border-color: #60a5fa; }
+        .dark .otp-input.verified { border-color: #34d399; background: rgba(52,211,153,0.1); }
+        .dark .otp-status-msg { color: #9ca3af; }
+        .dark .otp-status-msg.success { color: #6ee7b7; }
+        .dark .otp-status-msg.error { color: #f87171; }
+        .dark .otp-timer { color: #6b7280; }
+        .dark .otp-error { color: #f87171; }
+        .dark .otp-verified-badge { background: rgba(52,211,153,0.15); color: #6ee7b7; border-color: rgba(52,211,153,0.3); }
+        .dark .btn-send-code { background: #3b82f6; }
+        .dark .btn-send-code:hover { background: #2563eb; }
+        .dark .btn-send-code:disabled { background: #4b5563; }
+        .dark .btn-verify-otp { background: #059669; }
+        .dark .btn-verify-otp:hover { background: #047857; }
+        .dark .btn-verify-otp:disabled { background: #4b5563; }
+        .dark .btn-submit { background: #059669; }
+        .dark .btn-submit:hover { background: #047857; }
+        .dark .btn-submit:disabled { background: #4b5563; }
+        .dark .btn-resend-code { color: #60a5fa; }
+        .dark .btn-secondary { background: #1f2937; color: #e5e7eb; border-color: #374151; }
+        .dark .btn-secondary:hover { background: #374151; }
+        .dark .btn-danger { background: #1f2937; border-color: #7f1d1d; color: #fca5a5; }
+        .dark .btn-danger:hover { background: #450a0a; border-color: #dc2626; }
+        .dark .modal { background: #1f2937; }
+        .dark .modal h3 { color: #f3f4f6; }
+        .dark .modal .line-item { border-color: #374151; color: #d1d5db; }
+        .dark .modal .line-item:last-child { border-color: #4b5563; }
+        .dark .modal-close { background: #374151; color: #f3f4f6; }
+        .dark .modal-close:hover { background: #4b5563; }
+        .dark .thankyou-box { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.3); }
+        .dark .thankyou-box h3 { color: #6ee7b7; }
+        .dark .thankyou-box .thanks-sub { color: #9ca3af; }
+        .dark .email-status { background: #1f2937; border-color: #374151; }
+        .dark .email-status-item { color: #9ca3af; }
+        .dark .email-status-item.success { color: #6ee7b7; }
+        .dark .email-status-item.error { color: #f87171; }
+        .dark .price-breakdown-btn { color: #60a5fa; }
+        .dark .error-msg { color: #f87171; }
     </style>
 </head>
 <body>
@@ -732,8 +890,9 @@
                 <span class="total" id="grandTotal">$0</span>
                 <span class="badge" style="margin-left:8px;" id="projectTypeBadge">Info site</span>
             </div>
-            <div>
+            <div style="display:flex;align-items:center;gap:8px;">
                 <button class="price-breakdown-btn" id="showBreakdownBtn" type="button">See breakdown</button>
+                <button id="surveyDarkToggle" onclick="toggleSurveyDark()" aria-label="Toggle dark mode" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:#64748b;padding:4px 6px;border-radius:6px;" title="Toggle dark mode">🌙</button>
             </div>
         </div>
 
@@ -772,7 +931,7 @@
                     </div>
                     <div class="sub-options" id="domainNameSub">
                         <label>What domain name do you have in mind (if any)?</label>
-                        <input type="text" name="domain_idea" placeholder="e.g. mybusiness.com" />
+                        <input type="text" name="domain_idea" placeholder="e.g. mybusiness.com" class="input-field" />
                     </div>
                 </div>
 
@@ -816,7 +975,7 @@
                     </div>
                     <div class="sub-options" id="emailCountSub">
                         <label>How many email accounts do you need?</label>
-                        <select name="email_count">
+                        <select name="email_count" class="input-field">
                             <option value="1">1 account</option>
                             <option value="2">2 accounts</option>
                             <option value="3">3 accounts</option>
@@ -856,15 +1015,15 @@
 
                 <div class="field-group">
                     <label>Your full name</label>
-                    <input type="text" name="full_name" required />
+                    <input type="text" name="full_name" required class="input-field" />
                 </div>
                 <div class="field-group">
                     <label>Business name</label>
-                    <input type="text" name="business_name" />
+                    <input type="text" name="business_name" class="input-field" />
                 </div>
                 <div class="field-group">
                     <label>Your email</label>
-                    <input type="email" name="client_email" id="client_email" required placeholder="you@example.com" />
+                    <input type="email" name="client_email" id="client_email" required placeholder="you@example.com" class="input-field" />
                 </div>
 
                 <!-- OTP Verification -->
@@ -887,11 +1046,11 @@
                 </div>
                 <div class="field-group">
                     <label>Your phone number</label>
-                    <input type="tel" name="client_phone" />
+                    <input type="tel" name="client_phone" class="input-field" />
                 </div>
                 <div class="field-group">
                     <label>What does your business do? (Describe in a few sentences)</label>
-                    <textarea name="business_desc" rows="3"></textarea>
+                    <textarea name="business_desc" rows="3" class="input-field"></textarea>
                 </div>
             </div>
 
@@ -1037,7 +1196,7 @@
 
                 <div class="field-group">
                     <label>Any other pages you need?</label>
-                    <input type="text" name="other_pages" placeholder="e.g. Careers, Events, Careers..." />
+                    <input type="text" name="other_pages" placeholder="e.g. Careers, Events, Careers..." class="input-field" />
                 </div>
             </div>
 
@@ -1249,12 +1408,12 @@
 
                 <div class="field-group">
                     <label>Do you have brand colors or a style in mind?</label>
-                    <input type="text" name="brand_colors" placeholder="e.g. blue and white, or I have a color palette ready" />
+                    <input type="text" name="brand_colors" placeholder="e.g. blue and white, or I have a color palette ready" class="input-field" />
                 </div>
 
                 <div class="field-group">
                     <label>Links to websites you like (for design inspiration)</label>
-                    <input type="text" name="inspiration_links" placeholder="Paste links here, separated by commas" />
+                    <input type="text" name="inspiration_links" placeholder="Paste links here, separated by commas" class="input-field" />
                 </div>
 
                 <div class="field-group">
@@ -1375,7 +1534,7 @@
 
                 <div class="field-group">
                     <label>Anything else you want me to know?</label>
-                    <textarea name="extra_notes" rows="3" placeholder="Any special requests, questions, or concerns..."></textarea>
+                    <textarea name="extra_notes" rows="3" placeholder="Any special requests, questions, or concerns..." class="input-field"></textarea>
                 </div>
             </div>
 
@@ -2486,6 +2645,28 @@
             // Scroll to thank-you
             thankyouBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
+
+        // =====================================================================
+        //  DARK MODE TOGGLE
+        // =====================================================================
+        function toggleSurveyDark() {
+            const html = document.documentElement;
+            const btn = document.getElementById('surveyDarkToggle');
+            const isDark = html.classList.toggle('dark');
+            try {
+                localStorage.setItem('amworx_darkmode', isDark ? 'true' : 'false');
+                localStorage.setItem('amworx_toggled_dark', '1');
+                btn.textContent = isDark ? '☀️' : '🌙';
+            } catch(e) {}
+        }
+        // Sync toggle button on load
+        (function() {
+            const btn = document.getElementById('surveyDarkToggle');
+            if (btn) {
+                const isDark = document.documentElement.classList.contains('dark');
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        })();
 
         // =====================================================================
         //  INITIAL CALCULATION
